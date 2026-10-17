@@ -1,4 +1,10 @@
 node_modules
-dist
+/dist
 *.tsbuildinfo
-dist-prototipe
+/dist-prototipe
+out/
+server/internal/web/dist/*
+!server/internal/web/dist/.gitkeep
+*.db
+*.db-wal
+*.db-shm
