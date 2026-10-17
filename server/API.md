@@ -393,7 +393,8 @@ type StokModel = { produk_id: number; produk_nama: string; kategori: string; sto
 Unduh biasa (`<a href>` / `window.location`), cookie sesi ikut terkirim. Respons `.xlsx` + `Content-Disposition: attachment`.
 - `GET /api/ekspor/laporan.xlsx[?dari=&sampai=&saluran_id=&produk_id=]` — "Laporan periode ini": sheet Ringkasan, Per saluran, Per model, Pengeluaran, Stok.
 - `GET /api/ekspor/transaksi.xlsx[?dari=&sampai=]` — "Semua transaksi" (tanpa tanggal = semua): sheet Penjualan (per baris),
-  Rincian potongan, Pengeluaran, Barang masuk, Penyesuaian stok.
+  Rincian potongan, Pengeluaran, Barang masuk, Penyesuaian stok. Sheet Rincian potongan: pesanan dengan potongan diubah manual
+  hanya punya satu baris "Diubah manual (final)" (tanpa komponen otomatis), jadi jumlah Rp per pesanan = potongan di sheet Penjualan.
 - `GET /api/ekspor/produk.xlsx` — "Daftar produk": sheet Produk (stok, modal, nilai stok, harga & untung per saluran) dan Harga per saluran (dengan target).
 
 Angka disimpan sebagai angka (bisa dijumlah di Excel), rupiah berformat `#,##0`.

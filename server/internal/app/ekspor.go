@@ -199,11 +199,13 @@ func (s *Server) eksporTransaksi(w http.ResponseWriter, r *http.Request) error {
 	}
 	prows := [][]any{}
 	for _, j := range jual {
-		for _, p := range j.RincianPotongan {
-			prows = append(prows, []any{j.Tanggal, j.ID, j.SaluranNama, p.Nama, p.Rp})
-		}
+		// Potongan diubah manual: hanya baris final, supaya jumlah per pesanan = potongan di sheet Penjualan.
 		if j.PotonganDiubah {
 			prows = append(prows, []any{j.Tanggal, j.ID, j.SaluranNama, "Diubah manual (final)", j.Potongan})
+			continue
+		}
+		for _, p := range j.RincianPotongan {
+			prows = append(prows, []any{j.Tanggal, j.ID, j.SaluranNama, p.Nama, p.Rp})
 		}
 	}
 	peng, err := loadPengeluaran(s.db, where("e")+` ORDER BY e.tanggal, e.id`, args...)
