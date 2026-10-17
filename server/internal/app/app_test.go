@@ -647,13 +647,14 @@ func TestMigrasi_Idempoten(t *testing.T) {
 			t.Fatalf("buka ke-%d: %v", i+1, err)
 		}
 		v, _ := db.Version(d)
-		if v != 1 {
+		if v != 2 {
 			t.Fatalf("versi = %d", v)
 		}
-		var n int
+		var n, k int
 		d.QueryRow(`SELECT COUNT(*) FROM saluran`).Scan(&n)
-		if n != 4 {
-			t.Fatalf("saluran = %d setelah buka ke-%d", n, i+1)
+		d.QueryRow(`SELECT COUNT(*) FROM kategori_pengeluaran`).Scan(&k)
+		if n != 4 || k != 4 {
+			t.Fatalf("saluran = %d, kategori = %d setelah buka ke-%d", n, k, i+1)
 		}
 		d.Close()
 	}
