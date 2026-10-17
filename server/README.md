@@ -42,6 +42,8 @@ Tidak ada akun/password bawaan. Setelah deploy pertama: `pastel create-user ibu`
 | `PASTEL_STATIC_DIR` | (kosong) | pakai folder ini untuk frontend, bukan hasil embed (pengembangan) |
 
 Produksi: `deploy/env/pastel.env.example` → `/etc/pastel/pastel.env`.
+Kontrak API lengkap (tipe respons) untuk frontend: [`API.md`](API.md).
+
 Uji lokal: `PASTEL_COOKIE_SECURE=0 PASTEL_DB=/tmp/p.db out/pastel` lalu buka http://127.0.0.1:8087.
 
 ## Keamanan
