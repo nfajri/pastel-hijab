@@ -202,6 +202,18 @@ func tanggal(s string, now time.Time) (string, error) {
 	return s, nil
 }
 
+// tanggalTransaksi = tanggal, tapi tidak boleh setelah hari ini (WIB); tanggal lampau boleh (input susulan).
+func tanggalTransaksi(s string, now time.Time) (string, error) {
+	tgl, err := tanggal(s, now)
+	if err != nil {
+		return "", err
+	}
+	if tgl > hariIni(now) {
+		return "", bad("Tanggal tidak boleh lewat dari hari ini")
+	}
+	return tgl, nil
+}
+
 func b2i(b bool) int {
 	if b {
 		return 1
