@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import DataState from '../components/DataState'
 import { BilahAtas, BilahBawah, Button, Input, Label, Pilihan, Tabs, Thumb } from '../components/ui'
-import { api } from '../lib/api'
+import { api, ApiError } from '../lib/api'
 import type { Penyesuaian, Produk } from '../lib/api-types'
 import { useToast } from '../lib/toast'
 import { useApi } from '../lib/useApi'
@@ -11,7 +11,7 @@ import { useKirim } from '../lib/useKirim'
 const ALASAN = ['Rusak', 'Hilang', 'Hitung fisik', 'Lainnya']
 type Mode = 'kurang' | 'tambah' | 'hitung'
 
-function Isi({ p }: { p: Produk }) {
+function Isi({ p, muatUlang }: { p: Produk; muatUlang: () => void }) {
   const nav = useNavigate()
   const { tampilkan } = useToast()
   const { sibuk, galat, kirim } = useKirim()
@@ -29,7 +29,14 @@ function Isi({ p }: { p: Produk }) {
   const simpan = async () => {
     const teks = catatan.trim() ? `${alasan}: ${catatan.trim()}` : alasan
     const body = mode === 'hitung' ? { produk_id: p.id, alasan: teks, stok_fisik: n } : { produk_id: p.id, alasan: teks, selisih: perubahan }
-    const r = await kirim(() => api<Penyesuaian>('/penyesuaian-stok', { method: 'POST', body }))
+    const r = await kirim(async () => {
+      try {
+        return await api<Penyesuaian>('/penyesuaian-stok', { method: 'POST', body })
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 409) muatUlang() // stok sudah berubah di perangkat lain: segarkan angka di layar
+        throw e
+      }
+    })
     if (!r.ok) return
     tampilkan(`Stok disesuaikan jadi ${r.hasil.stok_sesudah}.`)
     nav(`/produk/${p.id}`, { replace: true })
@@ -104,7 +111,7 @@ export default function PenyesuaianStok() {
   const produk = useApi<Produk>(`/produk/${id}`)
   return (
     <DataState hasil={produk} baris={3}>
-      {(p) => <Isi key={p.id} p={p} />}
+      {(p) => <Isi key={p.id} p={p} muatUlang={produk.muat} />}
     </DataState>
   )
 }

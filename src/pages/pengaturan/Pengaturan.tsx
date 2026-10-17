@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BarisLink, BilahAtas, Button, Daftar, IK, Ikon, Input, KepalaHalaman, Sheet } from '../../components/ui'
-import { api } from '../../lib/api'
+import { api, ApiError } from '../../lib/api'
 import type { KomponenModal, Pengaturan as TPengaturan, Saluran } from '../../lib/api-types'
 import type { KategoriPengeluaran } from '../../lib/api-tahap2'
 import { useAuth } from '../../lib/auth'
@@ -16,18 +16,30 @@ function GantiSandi({ buka, tutup }: { buka: boolean; tutup: () => void }) {
   const [baru, setBaru] = useState('')
   const [ulang, setUlang] = useState('')
   const [coba, setCoba] = useState(false)
+  const [lamaSalah, setLamaSalah] = useState(false)
   const { sibuk, galat, kirim } = useKirim()
 
   const errBaru = !coba ? undefined : baru.length < 8 ? 'Kata sandi baru minimal 8 karakter' : baru.length > 72 ? 'Kata sandi baru maksimal 72 karakter' : undefined
   const errUlang = coba && baru !== ulang ? 'Kata sandi baru tidak sama' : undefined
-  const errLama = coba && !lama ? 'Isi kata sandi lama' : undefined
+  const errLama = lamaSalah ? 'Kata sandi lama salah' : coba && !lama ? 'Isi kata sandi lama' : undefined
 
   const simpan = async (e: FormEvent) => {
     e.preventDefault()
     setCoba(true)
     if (!lama || baru.length < 8 || baru.length > 72 || baru !== ulang) return
-    const r = await kirim(() => api('/auth/ganti-password', { method: 'POST', body: { password_lama: lama, password_baru: baru } }))
-    if (r.ok) {
+    setLamaSalah(false)
+    // 403 = sandi lama salah (server membalas Inggris): tampilkan di kolom lama dengan kata Indonesia
+    const r = await kirim(async () => {
+      try {
+        await api('/auth/ganti-password', { method: 'POST', body: { password_lama: lama, password_baru: baru } })
+        return true
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 403) return false
+        throw err
+      }
+    })
+    if (r.ok && !r.hasil) setLamaSalah(true)
+    else if (r.ok) {
       tampilkan('Kata sandi diganti. Perangkat lain perlu masuk lagi.')
       setLama('')
       setBaru('')
@@ -40,7 +52,7 @@ function GantiSandi({ buka, tutup }: { buka: boolean; tutup: () => void }) {
   return (
     <Sheet open={buka} onClose={tutup} title="Ganti kata sandi">
       <form className="flex flex-col gap-4" onSubmit={simpan} noValidate>
-        <Input label="Kata sandi lama" type="password" autoComplete="current-password" value={lama} onChange={(e) => setLama(e.target.value)} error={errLama} />
+        <Input label="Kata sandi lama" type="password" autoComplete="current-password" value={lama} onChange={(e) => { setLama(e.target.value); setLamaSalah(false) }} error={errLama} />
         <Input label="Kata sandi baru" type="password" autoComplete="new-password" hint="8–72 karakter" value={baru} onChange={(e) => setBaru(e.target.value)} error={errBaru} />
         <Input label="Ulangi kata sandi baru" type="password" autoComplete="new-password" value={ulang} onChange={(e) => setUlang(e.target.value)} error={errUlang} />
         {galat && (

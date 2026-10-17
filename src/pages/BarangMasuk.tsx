@@ -141,11 +141,13 @@ function Isi({ produk, master, saluran, supplierAda, lama, produkAwal }: IsiProp
   const naik = p && modalBaru != null && modalBaru > p.modal && p.harga.length > 0
   const salNaik = naik ? saluran.filter((s) => p!.harga.some((h) => h.saluran_id === s.id)) : []
 
+  const errTanggal = !tanggal ? 'Isi tanggal' : tanggal > hariIni ? 'Tanggal tidak boleh di masa depan' : undefined
+
   const ubahBaris = (key: string, nilai: number | null) => setBaris((bs) => bs.map((b) => (b.key === key ? { ...b, nilai } : b)))
 
   const simpan = async () => {
     setCoba(true)
-    if (!p || q <= 0 || beli == null) return
+    if (!p || q <= 0 || beli == null || errTanggal) return
     const body: BarangMasukInput = {
       tanggal,
       supplier: supplier.trim(),
@@ -205,7 +207,7 @@ function Isi({ produk, master, saluran, supplierAda, lama, produkAwal }: IsiProp
             <RupiahInput label="Harga beli/pcs" value={beli} onValueChange={setBeli} error={coba && beli == null ? 'Isi harga' : undefined} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Tanggal" type="date" value={tanggal} max={hariIni} onChange={(e) => setTanggal(e.target.value)} />
+            <Input label="Tanggal" type="date" value={tanggal} max={hariIni} onChange={(e) => setTanggal(e.target.value)} error={coba ? errTanggal : undefined} />
             <Input label="Supplier" placeholder="Opsional" list="supplier" value={supplier} onChange={(e) => setSupplier(e.target.value)} />
             <datalist id="supplier">
               {supplierAda.map((s) => (

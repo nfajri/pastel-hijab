@@ -251,41 +251,44 @@ export default function DetailProduk() {
 
               <DataState hasil={saluran} baris={2}>
                 {(sals) => (
-                  <Daftar
-                    judul="Harga jual per saluran"
-                    aksi={
-                      <Link to={`/harga?produk=${p.id}`} className="text-sm font-semibold text-brand-700">
-                        Hitung harga
-                      </Link>
-                    }
-                  >
-                    {sals.length === 0 && <p className="px-4 py-4 text-sm text-stone-500">Belum ada saluran aktif. Aktifkan di Pengaturan → Saluran & potongan.</p>}
-                    {sals.map((s) => {
-                      const hs = p.harga.find((h) => h.saluran_id === s.id)
-                      if (!hs)
+                  <>
+                    <Daftar
+                      judul="Harga jual per saluran"
+                      aksi={
+                        <Link to={`/harga?produk=${p.id}`} className="text-sm font-semibold text-brand-700">
+                          Hitung harga
+                        </Link>
+                      }
+                    >
+                      {sals.length === 0 && <p className="px-4 py-4 text-sm text-stone-500">Belum ada saluran aktif. Aktifkan di Pengaturan → Saluran & potongan.</p>}
+                      {sals.map((s) => {
+                        const hs = p.harga.find((h) => h.saluran_id === s.id)
+                        if (!hs)
+                          return (
+                            <button key={s.id} type="button" onClick={() => setHarga(s.id)} className="flex min-h-14 w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-stone-50">
+                              <span className="font-medium text-ink">{s.nama}</span>
+                              <span className="text-sm font-semibold text-brand-700">Atur harga</span>
+                            </button>
+                          )
+                        const r = perkiraanUntung(p.modal, s, hs.harga)
                         return (
-                          <button key={s.id} type="button" onClick={() => setHarga(s.id)} className="flex min-h-14 w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-stone-50">
-                            <span className="font-medium text-ink">{s.nama}</span>
-                            <span className="text-sm font-semibold text-brand-700">Atur harga</span>
+                          <button key={s.id} type="button" onClick={() => setHarga(s.id)} className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-ink">{s.nama}</p>
+                              <p className="text-sm text-stone-500 tabular-nums">
+                                Untung {rp(r.untung)} · {fmtPersen(r.persenJual)}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-ink tabular-nums">{rp(hs.harga)}</p>
+                              {r.untung < 0 && <Lencana nada="bahaya">Rugi</Lencana>}
+                            </div>
                           </button>
                         )
-                      const r = perkiraanUntung(p.modal, s, hs.harga)
-                      return (
-                        <button key={s.id} type="button" onClick={() => setHarga(s.id)} className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50">
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-ink">{s.nama}</p>
-                            <p className="text-sm text-stone-500 tabular-nums">
-                              Untung {rp(r.untung)} · {fmtPersen(r.persenJual)}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-ink tabular-nums">{rp(hs.harga)}</p>
-                            {r.untung < 0 && <Lencana nada="bahaya">Rugi</Lencana>}
-                          </div>
-                        </button>
-                      )
-                    })}
-                  </Daftar>
+                      })}
+                    </Daftar>
+                    <p className="mt-2 px-1 text-xs text-stone-500">Untung adalah perkiraan untuk 1 pcs dalam satu pesanan (setelah modal dan potongan saluran). Untung sebenarnya bisa beda bila satu pesanan berisi lebih dari 1 pcs.</p>
+                  </>
                 )}
               </DataState>
             </div>
