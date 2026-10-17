@@ -598,3 +598,35 @@ func TestEkspor_Butir14(t *testing.T) {
 		t.Fatalf("tanggal salah: %d", code)
 	}
 }
+
+// T-0143: sheet "Rincian potongan" tidak menjumlah dobel; jumlah per pesanan = potongan di sheet Penjualan.
+func TestEkspor_RincianPotonganDiubahManual(t *testing.T) {
+	f := newFixture(t)
+	a := f.produk("Pashmina Ceruty", 10, 25000)
+	bb := f.produk("Bergo Jersey", 10, 10000)
+	otomatis, _ := f.jual(map[string]any{"saluran_id": salShopee, "tanggal": "2026-10-05", "baris": []any{baris(a, 1, 44000)}}, 201)
+	manual, _ := f.jual(map[string]any{"saluran_id": salShopee, "tanggal": "2026-10-06", "potongan": 8000, "baris": []any{baris(a, 1, 44000), baris(bb, 1, 20000)}}, 201)
+	if !manual.PotonganDiubah {
+		t.Fatal("potongan harus berstatus diubah")
+	}
+	x := f.xlsx("/api/ekspor/transaksi.xlsx")
+	jumlah := func(sheet string, kolom int) map[string]float64 {
+		rows, _ := x.GetRows(sheet)
+		m := map[string]float64{}
+		for _, r := range rows[1:] {
+			v, _ := strconv.ParseFloat(strings.ReplaceAll(r[kolom], ",", ""), 64)
+			m[r[1]] += v
+		}
+		return m
+	}
+	rincian, dijual := jumlah("Rincian potongan", 4), jumlah("Penjualan", 7)
+	for _, j := range []penjualan{otomatis, manual} {
+		id := strconv.FormatInt(j.ID, 10)
+		if rincian[id] != float64(j.Potongan) || dijual[id] != float64(j.Potongan) {
+			t.Fatalf("pesanan %s: rincian %v, penjualan %v, potongan %v", id, rincian[id], dijual[id], j.Potongan)
+		}
+	}
+	if rows, _ := x.GetRows("Rincian potongan"); len(rows) != 1+2+1 { // otomatis: 2 komponen; manual: 1 baris final
+		t.Fatalf("baris rincian = %d", len(rows)-1)
+	}
+}
