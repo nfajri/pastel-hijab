@@ -4,11 +4,14 @@ export class ApiError extends Error {
   status: number
   /** Hanya untuk 429: detik sampai boleh mencoba lagi. */
   retryAfter?: number
-  constructor(status: number, message: string, retryAfter?: number) {
+  /** Body JSON error apa adanya (mis. `stok_kurang[]` pada 409 penjualan). */
+  data?: unknown
+  constructor(status: number, message: string, retryAfter?: number, data?: unknown) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.retryAfter = retryAfter
+    this.data = data
   }
 }
 
@@ -53,7 +56,7 @@ export async function api<T = void>(path: string, opsi: OpsiRequest = {}): Promi
   if (!res.ok) {
     if (res.status === 401 && !tanpaRedirect401) saatTidakLogin()
     const d = (data ?? {}) as { error?: string; retry_after_detik?: number }
-    throw new ApiError(res.status, d.error || `Permintaan gagal (${res.status}).`, d.retry_after_detik)
+    throw new ApiError(res.status, d.error || `Permintaan gagal (${res.status}).`, d.retry_after_detik, data)
   }
   return data as T
 }

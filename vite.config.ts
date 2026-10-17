@@ -17,12 +17,22 @@ function fileProtocolFriendly(): Plugin {
   }
 }
 
+const API = process.env.PASTEL_API ?? 'http://127.0.0.1:8087'
+
 // `npm run build` memakai `--base ./`.
 export default defineConfig({
   plugins: [react(), tailwindcss(), fileProtocolFriendly()],
   // Dev: API dilayani binary Go lokal (server/). PASTEL_API untuk alamat lain; jalankan server dengan PASTEL_COOKIE_SECURE=0.
+  // Proxy mengganti Host ke alamat server, tetapi Origin browser tetap alamat dev, sehingga cek CSRF server (Origin harus = Host)
+  // menolak semua POST/PUT/DELETE. Origin ikut diganti ke alamat server (hanya dev; produksi satu origin).
   server: {
-    proxy: { '/api': process.env.PASTEL_API ?? 'http://127.0.0.1:8087' },
+    proxy: {
+      '/api': {
+        target: API,
+        changeOrigin: true,
+        configure: (proxy) => proxy.on('proxyReq', (req) => req.setHeader('origin', API)),
+      },
+    },
   },
   build: {
     modulePreload: false,
