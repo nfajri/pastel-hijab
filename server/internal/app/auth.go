@@ -8,11 +8,13 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"log"
 	"math"
 	"net"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -23,11 +25,11 @@ import (
 var BcryptCost = 11
 
 const (
-	maxGagalPerIP   = 5  // 5 gagal dari satu IP → tunggu
-	maxGagalGlobal  = 20 // lapis kedua bila penyerang berganti-ganti IP
-	jendelaGagal    = 15 * time.Minute
-	minPasswordLen  = 8
-	maxPasswordByte = 72 // batas bcrypt
+	maxGagalPerIP    = 5  // 5 gagal dari satu IP → tunggu
+	ambangPeringatan = 20 // gagal dari semua IP dalam jendela → tulis PERINGATAN di log (tidak mengunci, lihat README)
+	jendelaGagal     = 15 * time.Minute
+	minPasswordLen   = 8
+	maxPasswordByte  = 72 // batas bcrypt
 )
 
 var ErrPassword = errors.New("password minimal 8 karakter dan maksimal 72 byte")
@@ -48,8 +50,23 @@ func HashPassword(p string) (string, error) {
 	return string(h), err
 }
 
-// Hash pengganti saat username tidak ada, supaya waktu respons sama (tidak membocorkan username).
-var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy-password-x"), bcrypt.MinCost)
+// dummyHash: hash pengganti saat username tidak ada, supaya waktu respons sama (tidak membocorkan username).
+// Cost harus sama dengan hash asli; dibuat saat pertama dipakai (dan dibuat ulang bila BcryptCost diubah test).
+var dummy struct {
+	sync.Mutex
+	cost int
+	hash []byte
+}
+
+func dummyHash() []byte {
+	dummy.Lock()
+	defer dummy.Unlock()
+	if dummy.hash == nil || dummy.cost != BcryptCost {
+		dummy.hash, _ = bcrypt.GenerateFromPassword([]byte("dummy-password-x"), BcryptCost)
+		dummy.cost = BcryptCost
+	}
+	return dummy.hash
+}
 
 // CreateUser dipakai perintah CLI `user create`.
 func CreateUser(db *sql.DB, username, password string, now time.Time) error {
@@ -243,17 +260,9 @@ func lockedUntil(q interface {
 
 func (s *Server) checkLock(ip string) error {
 	now := s.cfg.Now()
-	u1, err := lockedUntil(s.db, "ip = ? AND", []any{ip}, maxGagalPerIP, now)
+	until, err := lockedUntil(s.db, "ip = ? AND", []any{ip}, maxGagalPerIP, now)
 	if err != nil {
 		return err
-	}
-	u2, err := lockedUntil(s.db, "", nil, maxGagalGlobal, now)
-	if err != nil {
-		return err
-	}
-	until := u1
-	if u2.After(until) {
-		until = u2
 	}
 	if !until.After(now) {
 		return nil
@@ -277,6 +286,14 @@ func (s *Server) recordFailure(ip, username string) error {
 	}
 	if _, err := s.db.Exec(`INSERT INTO login_failures (ip, username, at) VALUES (?, ?, ?)`, ip, username, fmtTime(now)); err != nil {
 		return err
+	}
+	// Kunci global sengaja tidak dipakai: penyerang bisa memakainya untuk mengunci Ibu. Cukup dicatat.
+	var n, nIP int
+	if err := s.db.QueryRow(`SELECT COUNT(*), COUNT(DISTINCT ip) FROM login_failures WHERE at > ?`, fmtTime(now.Add(-jendelaGagal))).Scan(&n, &nIP); err != nil {
+		return err
+	}
+	if n%ambangPeringatan == 0 {
+		log.Printf("PERINGATAN: %d login gagal dari %d IP dalam 15 menit terakhir (terakhir: ip=%s username=%q)", n, nIP, ip, username)
 	}
 	_, err := s.db.Exec(`DELETE FROM login_failures WHERE at < ?`, fmtTime(now.Add(-24*time.Hour)))
 	return err
@@ -311,7 +328,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) error {
 	)
 	err := s.db.QueryRow(`SELECT id, password_hash FROM users WHERE username = ?`, strings.TrimSpace(in.Username)).Scan(&id, &hash)
 	if errors.Is(err, sql.ErrNoRows) {
-		hash = string(dummyHash)
+		hash = string(dummyHash())
 		id = 0
 	} else if err != nil {
 		return err
