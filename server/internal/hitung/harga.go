@@ -251,17 +251,25 @@ func HitungRincian(M float64, komponen []Potongan, harga int64) Rincian {
 	return r
 }
 
-// MemenuhiTarget melaporkan apakah untung pada rincian ini mencapai target.
+// toleransiTarget = selisih rupiah yang masih dianggap "sesuai target". Harga dan tiap komponen potongan
+// dibulatkan ke rupiah, sehingga untung pada harga saran (pembulatan "tanpa") bisa kurang sepersekian
+// rupiah dari target persis (mis. 11.769 vs 11.769,3).
+const toleransiTarget = 1
+
+// MemenuhiTarget melaporkan apakah untung pada rincian ini mencapai target (dengan toleransi ±Rp1).
 func MemenuhiTarget(r Rincian, cara string, nilai float64) bool {
+	var target float64
 	switch cara {
 	case TargetPersenJual:
-		return r.PersenJual+eps >= nilai
+		target = nilai / 100 * float64(r.Harga)
 	case TargetPersenModal:
-		return r.PersenModal+eps >= nilai
+		target = nilai / 100 * r.Modal
 	case TargetRupiah:
-		return r.Untung+eps >= nilai
+		target = nilai
+	default:
+		return true
 	}
-	return true
+	return r.Untung+toleransiTarget+eps >= target
 }
 
 // HargaSaran = harga target yang sudah dibulatkan ke atas.

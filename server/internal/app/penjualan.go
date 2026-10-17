@@ -286,6 +286,31 @@ func keHitung(list []potongan) []hitung.Potongan {
 
 func hariIni(now time.Time) string { return now.In(wib).Format(time.DateOnly) }
 
+type barisJual struct {
+	produkID int64
+	qty      int64
+	harga    int64
+	hpp      float64
+}
+
+// sama melaporkan apakah saluran dan baris (produk, qty, harga; urutan bebas) tidak berubah dari versi lama.
+func sama(lama *penjualan, saluranID int64, bs []barisJual) bool {
+	if lama.SaluranID != saluranID || len(lama.Baris) != len(bs) {
+		return false
+	}
+	type kunci struct{ qty, harga int64 }
+	m := map[int64]kunci{}
+	for _, b := range lama.Baris {
+		m[b.ProdukID] = kunci{b.Qty, b.Harga}
+	}
+	for _, b := range bs {
+		if k, ok := m[b.produkID]; !ok || k != (kunci{b.qty, b.harga}) {
+			return false
+		}
+	}
+	return true
+}
+
 // terapkanJual memvalidasi pesanan, mengurangi stok, lalu menyimpan penjualan (id 0 = baru).
 // lama = versi sebelum diubah (stoknya sudah dikembalikan oleh batalkanJual), nil untuk penjualan baru:
 // produk yang sudah ada di versi lama memakai HPP lama, supaya edit tidak mengubah untung karena modal berubah (§7 butir 11).
@@ -330,13 +355,7 @@ func (s *Server) terapkanJual(tx *sql.Tx, id int64, in penjualanIn, lama *penjua
 		}
 	}
 
-	type baris struct {
-		produkID int64
-		qty      int64
-		harga    int64
-		hpp      float64
-	}
-	bs := make([]baris, 0, len(in.Baris))
+	bs := make([]barisJual, 0, len(in.Baris))
 	var kurang []stokKurang
 	seen := map[int64]bool{}
 	var subtotal, qty int64
@@ -392,7 +411,7 @@ func (s *Server) terapkanJual(tx *sql.Tx, id int64, in penjualanIn, lama *penjua
 		if !ok {
 			hpp = modal
 		}
-		bs = append(bs, baris{b.ProdukID, b.Qty, harga, hpp})
+		bs = append(bs, barisJual{b.ProdukID, b.Qty, harga, hpp})
 		subtotal += b.Qty * harga
 		qty += b.Qty
 	}
@@ -409,27 +428,60 @@ func (s *Server) terapkanJual(tx *sql.Tx, id int64, in penjualanIn, lama *penjua
 		return 0, bad("total pesanan terlalu besar")
 	}
 
-	komp, err := potonganAktif(tx, in.SaluranID)
-	if err != nil {
-		return 0, err
+	// Rincian potongan (salinan komponen saluran + rupiahnya) yang disimpan bersama penjualan.
+	type potSimpan struct {
+		id     *int64
+		nama   string
+		jenis  string
+		nilai  float64
+		maksRp *int64
+		rp     int64
 	}
-	rpKomp := hitung.PotonganPesanan(keHitung(komp), subtotal, qty)
-	var otomatis int64
-	for _, v := range rpKomp {
-		otomatis += v
-	}
-	final, diubah := otomatis, false
-	if in.Potongan != nil {
-		if err := rupiah("potongan", *in.Potongan); err != nil {
+	var rincian []potSimpan
+	var otomatis, final int64
+	var diubah bool
+	var alok []int64
+	if lama != nil && in.Potongan == nil && sama(lama, in.SaluranID, bs) {
+		// Edit yang tidak mengubah baris/qty/harga/saluran (mis. hanya catatan/tanggal) mempertahankan potongan
+		// tersimpan, supaya laba lama tidak berubah diam-diam karena pengaturan saluran sudah diganti (T-0138).
+		otomatis, final, diubah = lama.PotonganOtomatis, lama.Potongan, lama.PotonganDiubah
+		for _, p := range lama.RincianPotongan {
+			rincian = append(rincian, potSimpan{p.PotonganID, p.Nama, p.Jenis, p.Nilai, p.MaksRp, p.Rp})
+		}
+		potBaris := map[int64]int64{}
+		for _, b := range lama.Baris {
+			potBaris[b.ProdukID] = b.Potongan
+		}
+		alok = make([]int64, len(bs))
+		for i, b := range bs {
+			alok[i] = potBaris[b.produkID]
+		}
+	} else {
+		komp, err := potonganAktif(tx, in.SaluranID)
+		if err != nil {
 			return 0, err
 		}
-		final, diubah = *in.Potongan, *in.Potongan != otomatis
+		rpKomp := hitung.PotonganPesanan(keHitung(komp), subtotal, qty)
+		for i, k := range komp {
+			otomatis += rpKomp[i]
+			rincian = append(rincian, potSimpan{&k.ID, k.Nama, k.Jenis, k.Nilai, k.MaksRp, rpKomp[i]})
+		}
+		final = otomatis
+		if in.Potongan != nil {
+			if err := rupiah("potongan", *in.Potongan); err != nil {
+				return 0, err
+			}
+			if *in.Potongan > subtotal {
+				return 0, bad("Potongan tidak boleh melebihi total harga")
+			}
+			final, diubah = *in.Potongan, *in.Potongan != otomatis
+		}
+		bobot := make([]int64, len(bs))
+		for i, b := range bs {
+			bobot[i] = b.qty * b.harga
+		}
+		alok = hitung.Alokasi(final, bobot)
 	}
-	bobot := make([]int64, len(bs))
-	for i, b := range bs {
-		bobot[i] = b.qty * b.harga
-	}
-	alok := hitung.Alokasi(final, bobot)
 
 	ts := fmtTime(now)
 	for _, b := range bs {
@@ -461,9 +513,9 @@ func (s *Server) terapkanJual(tx *sql.Tx, id int64, in penjualanIn, lama *penjua
 			return 0, err
 		}
 	}
-	for i, k := range komp {
+	for _, k := range rincian {
 		if _, err := tx.Exec(`INSERT INTO penjualan_potongan (penjualan_id, potongan_id, nama, jenis, nilai, maks_rp, rp) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-			id, k.ID, k.Nama, k.Jenis, k.Nilai, k.MaksRp, rpKomp[i]); err != nil {
+			id, k.id, k.nama, k.jenis, k.nilai, k.maksRp, k.rp); err != nil {
 			return 0, err
 		}
 	}

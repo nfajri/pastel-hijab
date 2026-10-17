@@ -158,6 +158,22 @@ func (s *Server) kalkulator(w http.ResponseWriter, r *http.Request) error {
 	} else if sal, err = s.loadSaluran(`WHERE aktif = 1`); err != nil {
 		return err
 	}
+	// Harga cek untuk saluran yang tidak ikut dihitung (tak ada, nonaktif, atau bukan saluran_id yang dipilih) ditolak,
+	// bukan dibuang diam-diam.
+	dihitung := map[int64]bool{}
+	for _, c := range sal {
+		dihitung[c.ID] = true
+	}
+	for _, c := range in.Cek {
+		if dihitung[c.SaluranID] {
+			continue
+		}
+		x, err := s.saluranByID(c.SaluranID)
+		if err != nil {
+			return err
+		}
+		return bad("harga cek untuk saluran %s tidak bisa dinilai: saluran nonaktif atau tidak dipilih", x.Nama)
+	}
 	for _, c := range sal {
 		var aktif []potongan
 		for _, p := range c.Potongan {

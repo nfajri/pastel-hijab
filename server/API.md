@@ -142,6 +142,7 @@ type Produk = {
 - `DELETE /api/produk/{id}` → `204`; `409` bila sudah punya riwayat stok atau penjualan (sarankan "Nonaktifkan").
 - `PUT /api/produk/{id}/harga/{saluran_id}` `{harga, target_cara?, target_nilai?}` → `Produk` (tombol "Pakai harga ini").
   Target dikirim berpasangan (dua-duanya atau tidak sama sekali); tidak dikirim = target dikosongkan.
+  `harga` harus > 0 (`0` → `400 "Isi harga"`).
 - `DELETE /api/produk/{id}/harga/{saluran_id}` → `204`
 
 ## Barang masuk (kulakan)
@@ -244,7 +245,7 @@ type PenjualanInput = {
   tanggal?: string;               // kosong = hari ini; tidak boleh setelah hari ini
   saluran_id: number;
   catatan?: string;
-  potongan?: number;              // tidak dikirim = otomatis; dikirim = potongan sebenarnya (mis. ada voucher)
+  potongan?: number;              // tidak dikirim = otomatis (lihat aturan edit); dikirim = potongan sebenarnya (mis. ada voucher), 0–subtotal
   baris: Array<{ produk_id: number; qty: number; harga?: number }>;  // harga tidak dikirim = harga produk di saluran ini
 }
 ```
@@ -256,6 +257,12 @@ type PenjualanInput = {
   hitungan & cek stok persis seperti simpan, **tanpa menyimpan**. Cocok untuk layar "Periksa".
 - `PUT /api/penjualan/{id}` `PenjualanInput` → `Penjualan`. Stok versi lama dikembalikan dulu, lalu versi baru dicek & diterapkan.
   Model yang sudah ada di versi lama tetap memakai `hpp` lamanya; model baru memakai modal sekarang.
+  **Potongan saat edit:** bila saluran dan baris (model, qty, harga; urutan bebas) sama dengan versi lama dan `potongan`
+  tidak dikirim (mis. hanya ganti catatan/tanggal), potongan tersimpan dipertahankan apa adanya (`potongan`,
+  `potongan_otomatis`, `potongan_diubah`, `rincian_potongan`, potongan per baris), walau pengaturan saluran sudah berubah.
+  Bila salah satunya berubah, potongan otomatis dihitung ulang dengan pengaturan saluran **sekarang**; `potongan` yang
+  dikirim eksplisit selalu dipakai. Catatan: baris tanpa `harga` memakai harga saluran sekarang, jadi kirim `harga`
+  lama saat edit supaya tidak terhitung "berubah".
 - `DELETE /api/penjualan/{id}` → `204` ("Penjualan dihapus, stok dikembalikan."). Modal produk tidak berubah.
 
 Aturan:
@@ -264,6 +271,9 @@ Aturan:
   ke rupiah, `potongan_otomatis` = jumlahnya (jadi rincian selalu cocok dengan totalnya).
 - Model nonaktif, saluran nonaktif, model yang sama dua kali, `qty` < 1, tanggal depan → `400`.
 - Harga tidak dikirim dan belum ada harga di saluran itu → `400 "Harga {model} di {saluran} belum diatur. Isi harga"`.
+- `harga: 0` per baris **boleh** (barang hadiah, diketik sengaja); untungnya negatif sebesar HPP.
+- `potongan` > subtotal pesanan → `400 "Potongan tidak boleh melebihi total harga"` (potongan = subtotal boleh).
+  Potongan *otomatis* yang melebihi subtotal (mis. biaya per pesanan > harga) tidak ditolak.
 - **Stok kurang (K-11)** → seluruh pesanan ditolak, stok tidak berubah:
   ```json
   409 {"error": "Stok tidak cukup. Pashmina Ceruty: stok tersisa 3",
@@ -286,6 +296,7 @@ type KalkulatorInput = {
   saluran_id?: number;            // kosong = semua saluran aktif (satu kartu per saluran)
   cek?: Array<{ saluran_id: number; harga: number }>;         // mode cek: harga yang diketik Ibu per kartu
 }
+// cek untuk saluran yang tidak ada → 404; saluran nonaktif / bukan saluran_id yang dipilih → 400.
 type KartuSaluran = {
   saluran_id: number; saluran_nama: string;
   tercapai: boolean;              // false = target tidak bisa dicapai (potongan % + target % ≥ 100%)
@@ -311,6 +322,9 @@ type KalkulatorHasil = { produk_id: number | null; modal: number; cara: CaraTarg
 Rumus (sama dengan `src/__prototipe__/lib/hitung.ts`): asumsi 1 pcs per pesanan (K-12); p = total % potongan, f = Rp per pesanan + Rp per pcs.
 Impas = (M + f) ÷ (1 − p); % jual: (M + f) ÷ (1 − p − m); % modal: (M + f + k·M) ÷ (1 − p); Rp: (M + f + R) ÷ (1 − p).
 Potongan % yang melewati `maks_rp` dihitung ulang sebagai Rp tetap. Pembulatan selalu ke atas; harga cantik = ⌈(H + 100) ÷ 1.000⌉ × 1.000 − 100.
+Status "sesuai target" (kartu & `di_bawah_target` produk) memakai toleransi Rp1: untung + 1 ≥ target dalam rupiah
+(persen jual × harga, persen modal × modal, atau Rp). Tanpa toleransi, saran dengan pembulatan "tanpa" bisa dinilai di bawah
+target karena harga dan tiap komponen potongan dibulatkan ke rupiah (mis. 39.231 → untung 11.769 = 29,9992%).
 
 Contoh (§7 butir 5): modal 25.000, Shopee 10% + Rp1.250/pesanan, `{"produk_id": 1, "cara": "persen_jual", "nilai": 30}` →
 kartu Shopee `mentah 43750, saran 44000, minimal 29167, status "sesuai_target"`, rincian potongan 4.400 + 1.250, untung 13.350 (30,34%).
@@ -392,3 +406,6 @@ Angka disimpan sebagai angka (bisa dijumlah di Excel), rupiah berformat `#,##0`.
   `PUT .../harga` menerima target, `GET /api/produk?di_bawah_target=1`; produk yang sudah terjual juga tidak bisa dihapus (409).
 - 17 Okt 2026 — T-0136 (tidak merusak): `PUT /api/barang-masuk/{id}` yang hanya mengubah tanggal/supplier/catatan tidak lagi
   ditolak 409 walau stok sebagian sudah keluar. Kunci login global (20 gagal semua IP) dihapus; yang tersisa 5 gagal per IP.
+- 17 Okt 2026 — T-0138: `PUT /api/penjualan/{id}` mempertahankan potongan tersimpan bila saluran/baris tidak berubah dan
+  `potongan` tidak dikirim (sebelumnya selalu dihitung ulang). Validasi baru: `potongan` > subtotal → 400, `PUT .../harga`
+  dengan `harga: 0` → 400, `cek` kalkulator untuk saluran tak ada/tak dihitung → 404/400. Status target bertoleransi Rp1.
