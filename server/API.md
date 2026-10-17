@@ -178,6 +178,8 @@ type BarangMasukInput = {
 - `DELETE /api/barang-masuk/{id}` → `204`
 
 Ubah/hapus ditolak `409` bila stok sekarang < qty kulakan itu (sebagian sudah terjual/dikeluarkan). Pesannya sudah siap tampil.
+Pengecualian: `PUT` yang `produk_id`, `qty`, `harga_beli`, dan `komponen`-nya sama (atau `komponen` tidak dikirim) hanya
+mengubah `tanggal`/`supplier`/`catatan` → selalu bisa, stok & modal tidak disentuh.
 
 Contoh:
 ```json
@@ -388,3 +390,5 @@ Angka disimpan sebagai angka (bisa dijumlah di Excel), rupiah berformat `#,##0`.
 - 17 Okt 2026 — tahap 2 (T-0135): penjualan, kalkulator, pengeluaran, laporan, ekspor. Tambahan di tahap 1 (tidak merusak):
   `HargaSaluran` + `target_cara/target_nilai/untung/di_bawah_target`, `Produk` + `di_bawah_target/terjual_30_hari`,
   `PUT .../harga` menerima target, `GET /api/produk?di_bawah_target=1`; produk yang sudah terjual juga tidak bisa dihapus (409).
+- 17 Okt 2026 — T-0136 (tidak merusak): `PUT /api/barang-masuk/{id}` yang hanya mengubah tanggal/supplier/catatan tidak lagi
+  ditolak 409 walau stok sebagian sudah keluar. Kunci login global (20 gagal semua IP) dihapus; yang tersisa 5 gagal per IP.

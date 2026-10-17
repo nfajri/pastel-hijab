@@ -48,11 +48,16 @@ Uji lokal: `PASTEL_COOKIE_SECURE=0 PASTEL_DB=/tmp/p.db out/pastel` lalu buka htt
 
 ## Keamanan
 
-- Password bcrypt (cost 11), 8–72 byte. Login gagal: username tidak ada & password salah dijawab sama ("Username atau password salah").
+- Password bcrypt (cost 11), 8–72 byte. Login gagal: username tidak ada & password salah dijawab sama ("Username atau password salah"),
+  dengan waktu yang sama (username tidak ada tetap dicek ke hash pengganti ber-cost sama).
 - Sesi: token acak 256-bit di cookie `HttpOnly; Secure; SameSite=Strict` (prefix `__Host-`); DB hanya menyimpan SHA-256-nya.
 - Rate limit: 5 gagal dari satu IP dalam 15 menit → 429 sampai 15 menit sejak kegagalan ke-5 terakhir (+ `Retry-After`).
-  Lapis kedua: 20 gagal dari IP mana pun dalam 15 menit → semua login dikunci sementara. Password lama salah di
-  "ganti password" juga dihitung.
+  Password lama salah di "ganti password" juga dihitung.
+  Sengaja **tidak ada kunci global** (semua IP): kunci seperti itu bisa dipakai siapa pun di internet untuk mengunci Ibu
+  terus-menerus. Sebagai gantinya, tiap kelipatan 20 gagal (semua IP) dalam 15 menit ditulis `PERINGATAN: … login gagal
+  dari … IP` di log. Risiko yang diterima: tebak password terdistribusi dari banyak IP tetap dibatasi 5/IP/15 menit dan
+  bcrypt; bila PERINGATAN sering muncul, ganti password dengan yang panjang (`pastel set-password`).
+- File database, `-wal`/`-shm`, dan hasil `pastel backup` berizin 0600 (umask 077; file lama dirapikan saat dibuka).
 - Semua `/api/*` selain `POST /api/auth/login` dan `GET /api/health` wajib sesi → 401 (termasuk path tak dikenal).
 - CSRF: SameSite=Strict + request yang mengubah data wajib `Content-Type: application/json`, dan ditolak (403) bila
   `Origin` beda host atau `Sec-Fetch-Site` = cross-site/same-site.

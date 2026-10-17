@@ -4,6 +4,7 @@ package db
 import (
 	"database/sql"
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/url"
@@ -27,6 +28,9 @@ func Open(path string) (*sql.DB, error) {
 		if err := os.MkdirAll(dir, 0o700); err != nil {
 			return nil, err
 		}
+	}
+	if err := privat(path); err != nil {
+		return nil, err
 	}
 	q := url.Values{}
 	q.Add("_pragma", "foreign_keys(1)")
@@ -103,11 +107,36 @@ func Version(d *sql.DB) (int, error) {
 	return int(v.Int64), err
 }
 
+// privat membuat file database (bila belum ada) berizin 0600 dan merapikan izin file lama beserta -wal/-shm.
+// SQLite membuat -wal/-shm dengan izin yang sama dengan file utamanya.
+func privat(path string) error {
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600)
+	if err != nil {
+		return err
+	}
+	f.Close()
+	for _, p := range []string{path, path + "-wal", path + "-shm"} {
+		if err := os.Chmod(p, 0o600); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return err
+		}
+	}
+	return nil
+}
+
 // Backup menyalin database ke file baru secara konsisten (VACUUM INTO), aman saat server jalan.
+// File tujuan dibuat dulu (kosong, 0600) karena VACUUM INTO memakai izin bawaan 0644.
 func Backup(d *sql.DB, dest string) error {
-	if _, err := os.Stat(dest); err == nil {
+	f, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if errors.Is(err, fs.ErrExist) {
 		return fmt.Errorf("%s sudah ada", dest)
 	}
-	_, err := d.Exec(`VACUUM INTO ?`, dest)
-	return err
+	if err != nil {
+		return err
+	}
+	f.Close()
+	if _, err := d.Exec(`VACUUM INTO ?`, dest); err != nil {
+		os.Remove(dest)
+		return err
+	}
+	return nil
 }

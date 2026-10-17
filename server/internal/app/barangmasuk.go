@@ -234,14 +234,7 @@ func siapkanKomponen(tx *sql.Tx, in []bmKomponenIn) ([]bmKomponen, error) {
 
 // terapkanMasuk menambah stok & memperbarui modal produk, lalu menyimpan baris barang masuk (id 0 = baru).
 func (s *Server) terapkanMasuk(tx *sql.Tx, id int64, in barangMasukIn) (int64, error) {
-	var err error
-	if in.Tanggal, err = tanggal(in.Tanggal, s.cfg.Now()); err != nil {
-		return 0, err
-	}
-	if in.Supplier, err = teks("supplier", in.Supplier, false, 100); err != nil {
-		return 0, err
-	}
-	if in.Catatan, err = teks("catatan", in.Catatan, false, 500); err != nil {
+	if err := s.rapikanKeterangan(&in); err != nil {
 		return 0, err
 	}
 	if in.Qty <= 0 || in.Qty > maxQty {
@@ -300,6 +293,38 @@ func (s *Server) terapkanMasuk(tx *sql.Tx, id int64, in barangMasukIn) (int64, e
 	return id, nil
 }
 
+// rapikanKeterangan memvalidasi tanggal/supplier/catatan (bagian yang tidak memengaruhi stok & modal).
+func (s *Server) rapikanKeterangan(in *barangMasukIn) error {
+	var err error
+	if in.Tanggal, err = tanggal(in.Tanggal, s.cfg.Now()); err != nil {
+		return err
+	}
+	if in.Supplier, err = teks("supplier", in.Supplier, false, 100); err != nil {
+		return err
+	}
+	in.Catatan, err = teks("catatan", in.Catatan, false, 500)
+	return err
+}
+
+// hitunganSama: produk, qty, harga beli, dan komponen tidak berubah → stok & modal tidak perlu disentuh.
+func hitunganSama(tx *sql.Tx, lama barangMasuk, in barangMasukIn) (bool, error) {
+	if in.ProdukID != lama.ProdukID || in.Qty != lama.Qty || in.HargaBeli != lama.HargaBeli || len(in.Komponen) != len(lama.Komponen) {
+		return false, nil
+	}
+	komp, err := siapkanKomponen(tx, in.Komponen)
+	if err != nil {
+		return false, err
+	}
+	for i, k := range komp {
+		l := lama.Komponen[i]
+		if k.Nama != l.Nama || k.Jenis != l.Jenis || k.Nilai != l.Nilai || (k.KomponenID == nil) != (l.KomponenID == nil) ||
+			(k.KomponenID != nil && *k.KomponenID != *l.KomponenID) {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
 // batalkanMasuk menarik kembali stok & modal dari satu barang masuk. Ditolak bila stok sekarang kurang
 // dari qty-nya (sebagian sudah terjual/dikeluarkan).
 func batalkanMasuk(tx *sql.Tx, id int64, now string) error {
@@ -350,6 +375,8 @@ func (s *Server) createBarangMasuk(w http.ResponseWriter, r *http.Request) error
 
 // PUT = batalkan versi lama lalu terapkan versi baru, dalam satu transaksi.
 // Komponen tidak dikirim (null) → pakai komponen tersimpan kulakan ini (bukan bawaan terbaru).
+// Bila hitungan (produk/qty/harga/komponen) sama, hanya tanggal/supplier/catatan yang diubah, sehingga tetap
+// bisa walau stoknya sebagian sudah keluar.
 func (s *Server) updateBarangMasuk(w http.ResponseWriter, r *http.Request) error {
 	id, err := pathID(r, "id")
 	if err != nil {
@@ -384,11 +411,25 @@ func (s *Server) updateBarangMasuk(w http.ResponseWriter, r *http.Request) error
 			}
 		}
 	}
-	if err := batalkanMasuk(tx, id, fmtTime(s.cfg.Now())); err != nil {
+	sama, err := hitunganSama(tx, lama, in)
+	if err != nil {
 		return err
 	}
-	if _, err := s.terapkanMasuk(tx, id, in); err != nil {
-		return err
+	if sama {
+		if err := s.rapikanKeterangan(&in); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(`UPDATE barang_masuk SET tanggal = ?, supplier = ?, catatan = ?, updated_at = ? WHERE id = ?`,
+			in.Tanggal, in.Supplier, in.Catatan, fmtTime(s.cfg.Now()), id); err != nil {
+			return err
+		}
+	} else {
+		if err := batalkanMasuk(tx, id, fmtTime(s.cfg.Now())); err != nil {
+			return err
+		}
+		if _, err := s.terapkanMasuk(tx, id, in); err != nil {
+			return err
+		}
 	}
 	b, err := barangMasukByID(tx, id)
 	if err != nil {
