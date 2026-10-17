@@ -45,7 +45,7 @@ export interface Penjualan {
   catatan?: string
 }
 
-export interface Biaya {
+export interface Pengeluaran {
   id: string
   tanggal: string
   kategori: string
@@ -112,7 +112,7 @@ export const KOMPONEN_MODAL: KomponenModal[] = [
   { id: 'km4', nama: 'Hangtag', jenis: 'perPcs', nilai: 500, aktif: false },
 ]
 
-export const KATEGORI_BIAYA = ['Sewa lapak', 'Iklan', 'Packaging massal', 'Lain-lain']
+export const KATEGORI_PENGELUARAN = ['Sewa lapak', 'Iklan', 'Packaging massal', 'Lain-lain']
 export const KATEGORI_PRODUK = ['Pashmina', 'Segi empat', 'Bergo', 'Khimar', 'Instan']
 export const PEMBULATAN_BAWAAN: Pembulatan = '1000'
 
@@ -275,7 +275,7 @@ function buatPenjualan(): Penjualan[] {
 
 export const PENJUALAN: Penjualan[] = buatPenjualan()
 
-export const BIAYA: Biaya[] = [
+export const PENGELUARAN: Pengeluaran[] = [
   { id: 'B-1', tanggal: '2026-10-11', kategori: 'Sewa lapak', jumlah: 50000, catatan: 'Pasar minggu Lapangan Merdeka' },
   { id: 'B-2', tanggal: '2026-10-09', kategori: 'Iklan', jumlah: 75000, catatan: 'Iklan Shopee 1 minggu' },
   { id: 'B-3', tanggal: '2026-10-06', kategori: 'Packaging massal', jumlah: 120000, catatan: 'Polymailer 200 lembar' },

@@ -2,9 +2,9 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState, type
 import type { CaraTarget, KomponenModal, Pembulatan } from './hitung'
 import { hargaMinimal, memenuhiTarget } from './hitung'
 import {
-  BIAYA,
+  PENGELUARAN,
   HARI_INI,
-  KATEGORI_BIAYA,
+  KATEGORI_PENGELUARAN,
   KOMPONEN_MODAL,
   MASUK,
   PEMBULATAN_BAWAAN,
@@ -13,7 +13,7 @@ import {
   PRODUK,
   SALURAN,
   type BarangMasuk,
-  type Biaya,
+  type Pengeluaran,
   type BarisJual,
   type Penjualan,
   type Penyesuaian,
@@ -23,7 +23,6 @@ import {
 
 /** Keadaan data untuk mendemokan state kosong / memuat / gagal (khusus prototipe). */
 export type ModeData = 'normal' | 'kosong' | 'memuat' | 'gagal'
-export type Opsi = 'A' | 'B'
 
 interface Toast {
   id: number
@@ -36,10 +35,10 @@ interface State {
   saluran: Saluran[]
   komponenModal: KomponenModal[]
   penjualan: Penjualan[]
-  biaya: Biaya[]
+  pengeluaran: Pengeluaran[]
   masuk: BarangMasuk[]
   penyesuaian: Penyesuaian[]
-  kategoriBiaya: string[]
+  kategoriPengeluaran: string[]
   pembulatan: Pembulatan
   saluranTerakhir: string
 }
@@ -49,17 +48,17 @@ const awal = (): State => ({
   saluran: SALURAN.map((s) => ({ ...s, potongan: s.potongan.map((k) => ({ ...k })) })),
   komponenModal: KOMPONEN_MODAL.map((k) => ({ ...k })),
   penjualan: PENJUALAN,
-  biaya: BIAYA,
+  pengeluaran: PENGELUARAN,
   masuk: MASUK,
   penyesuaian: PENYESUAIAN,
-  kategoriBiaya: KATEGORI_BIAYA,
+  kategoriPengeluaran: KATEGORI_PENGELUARAN,
   pembulatan: PEMBULATAN_BAWAAN,
   saluranTerakhir: 'shopee',
 })
 
-const kosong = (): State => ({ ...awal(), produk: [], penjualan: [], biaya: [], masuk: [], penyesuaian: [] })
+const kosong = (): State => ({ ...awal(), produk: [], penjualan: [], pengeluaran: [], masuk: [], penyesuaian: [] })
 
-function useStoreValue(opsi: Opsi) {
+function useStoreValue() {
   const [s, set] = useState<State>(awal)
   const [mode, setModeRaw] = useState<ModeData>('normal')
   const [toast, setToast] = useState<Toast | null>(null)
@@ -143,8 +142,8 @@ function useStoreValue(opsi: Opsi) {
     }))
   }, [])
 
-  const simpanBiaya = useCallback((b: Omit<Biaya, 'id'>) => {
-    set((st) => ({ ...st, biaya: [{ ...b, id: `B-${st.biaya.length + 10}` }, ...st.biaya] }))
+  const simpanPengeluaran = useCallback((b: Omit<Pengeluaran, 'id'>) => {
+    set((st) => ({ ...st, pengeluaran: [{ ...b, id: `B-${st.pengeluaran.length + 10}` }, ...st.pengeluaran] }))
   }, [])
 
   const simpanProduk = useCallback((p: Produk) => {
@@ -173,7 +172,6 @@ function useStoreValue(opsi: Opsi) {
 
   return {
     ...s,
-    opsi,
     hariIni: HARI_INI,
     mode,
     setMode,
@@ -185,7 +183,7 @@ function useStoreValue(opsi: Opsi) {
     pakaiHarga,
     simpanMasuk,
     simpanPenyesuaian,
-    simpanBiaya,
+    simpanPengeluaran,
     simpanProduk,
     update,
     hargaBermasalah,
@@ -196,8 +194,8 @@ function useStoreValue(opsi: Opsi) {
 type Store = ReturnType<typeof useStoreValue>
 const Ctx = createContext<Store | null>(null)
 
-export function StoreProvider({ opsi, children }: { opsi: Opsi; children: ReactNode }) {
-  const v = useStoreValue(opsi)
+export function StoreProvider({ children }: { children: ReactNode }) {
+  const v = useStoreValue()
   return <Ctx.Provider value={v}>{children}</Ctx.Provider>
 }
 

@@ -47,7 +47,7 @@ export default function Laporan() {
     })
     .filter((j) => j.baris.length)
   const filterAktif = fSaluran !== 'semua' || fModel !== 'semua'
-  const bs = filterAktif ? [] : st.biaya.filter((b) => dalam(b.tanggal, r0))
+  const bs = filterAktif ? [] : st.pengeluaran.filter((b) => dalam(b.tanggal, r0))
   const r = ringkas(js, bs)
 
   const perSaluran = st.saluran
@@ -95,7 +95,7 @@ export default function Laporan() {
 
       {st.mode === 'memuat' && <Kerangka baris={5} />}
       {st.mode === 'gagal' && <Gagal onUlang={() => st.setMode('normal')} />}
-      {st.mode === 'kosong' && <Kosong ikon={IK.laporan} judul="Belum ada data untuk dilaporkan" teks="Laporan laba muncul setelah ada penjualan atau biaya yang dicatat." />}
+      {st.mode === 'kosong' && <Kosong ikon={IK.laporan} judul="Belum ada data untuk dilaporkan" teks="Laporan laba muncul setelah ada penjualan atau pengeluaran yang dicatat." />}
 
       {st.mode === 'normal' && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-start">
@@ -150,12 +150,12 @@ export default function Laporan() {
                 <Rinci label="Laba kotor" nilai={rp(r.labaKotor)} tebal garis />
                 {!filterAktif && (
                   <>
-                    <Rinci label="Biaya operasional" nilai={`−${rp(r.biaya)}`} nada="kurang" />
+                    <Rinci label="Pengeluaran" nilai={`−${rp(r.pengeluaran)}`} nada="kurang" />
                     <Rinci label="Laba bersih" nilai={rp(r.labaBersih)} tebal garis nada={r.labaBersih < 0 ? 'rugi' : 'untung'} />
                   </>
                 )}
               </div>
-              {filterAktif && <p className="mt-2 text-xs text-stone-500">Biaya operasional tidak dibagi per saluran/model, jadi laba bersih hanya tampil tanpa filter.</p>}
+              {filterAktif && <p className="mt-2 text-xs text-stone-500">Pengeluaran tidak dibagi per saluran/model, jadi laba bersih hanya tampil tanpa filter.</p>}
             </section>
           </div>
 
@@ -245,7 +245,7 @@ export default function Laporan() {
         <div className="-mx-4 divide-y divide-stone-100 border-y border-stone-100">
           {[
             ['Laporan periode ini', `${PERIODE.find((p) => p.key === periode)!.label}${filterAktif ? ', sesuai filter' : ''}`],
-            ['Semua transaksi', 'Penjualan per baris + biaya'],
+            ['Semua transaksi', 'Penjualan per baris + pengeluaran'],
             ['Daftar produk', 'Stok, modal, harga per saluran'],
           ].map(([a, b]) => (
             <button key={a} type="button" onClick={() => setEkspor(false)} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50">

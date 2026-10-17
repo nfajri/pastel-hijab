@@ -303,22 +303,22 @@ export function PenyesuaianStok() {
   )
 }
 
-export function CatatBiaya() {
+export function CatatPengeluaran() {
   const st = useStore()
   const nav = useNavigate()
   const [tanggal, setTanggal] = useState(st.hariIni)
-  const [kat, setKat] = useState(st.kategoriBiaya[0])
+  const [kat, setKat] = useState(st.kategoriPengeluaran[0])
   const [jumlah, setJumlah] = useState<number | null>(null)
   const [catatan, setCatatan] = useState('')
   const [coba, setCoba] = useState(false)
   return (
     <div className="md:max-w-xl">
-      <BilahAtas judul="Catat biaya" tutup />
+      <BilahAtas judul="Catat pengeluaran" tutup />
       <div className="flex flex-col gap-5">
-        <RupiahInput label="Jumlah" value={jumlah} onValueChange={setJumlah} error={coba && !jumlah ? 'Isi jumlah biaya' : undefined} className="text-lg font-semibold" />
+        <RupiahInput label="Jumlah" value={jumlah} onValueChange={setJumlah} error={coba && !jumlah ? 'Isi jumlah pengeluaran' : undefined} className="text-lg font-semibold" />
         <div>
           <Label>Kategori</Label>
-          <Pilihan label="Kategori" items={st.kategoriBiaya.map((k) => ({ key: k, label: k }))} value={kat} onChange={setKat} />
+          <Pilihan label="Kategori" items={st.kategoriPengeluaran.map((k) => ({ key: k, label: k }))} value={kat} onChange={setKat} />
         </div>
         <Input label="Tanggal" type="date" value={tanggal} max={st.hariIni} onChange={(e) => setTanggal(e.target.value)} />
         <Input label="Catatan" placeholder="Opsional, mis. Pasar minggu Lapangan Merdeka" value={catatan} onChange={(e) => setCatatan(e.target.value)} />
@@ -330,12 +330,12 @@ export function CatatBiaya() {
           onClick={() => {
             setCoba(true)
             if (!jumlah) return
-            st.simpanBiaya({ tanggal, kategori: kat, jumlah, catatan: catatan || undefined })
-            st.tampilkan(`Biaya ${kat} ${rp(jumlah)} tersimpan.`)
+            st.simpanPengeluaran({ tanggal, kategori: kat, jumlah, catatan: catatan || undefined })
+            st.tampilkan(`Pengeluaran ${kat} ${rp(jumlah)} tersimpan.`)
             nav(-1)
           }}
         >
-          Simpan biaya
+          Simpan pengeluaran
         </Button>
       </BilahBawah>
     </div>

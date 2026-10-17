@@ -6,7 +6,7 @@ import { CARA_TARGET, PEMBULATAN, rp, type CaraTarget, type Pembulatan } from '.
 import { useStore } from '../../lib/store'
 import { IK, Ikon, Pilihan, StokLencana, Thumb } from '../../ui'
 
-/** State bersama kalkulator (Opsi A & B). */
+/** State bersama kalkulator. */
 export function useKalkulator() {
   const st = useStore()
   const [sp] = useSearchParams()

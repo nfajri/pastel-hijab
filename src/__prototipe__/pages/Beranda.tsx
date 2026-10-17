@@ -8,11 +8,11 @@ import { BarisLink, Daftar, Gagal, IK, Ikon, Kerangka, Kosong, Lencana, StokLenc
 
 export default function Beranda() {
   const st = useStore()
-  const { mode, produk, penjualan, biaya, hariIni, hargaBermasalah, saluran } = st
+  const { mode, produk, penjualan, pengeluaran, hariIni, hargaBermasalah, saluran } = st
 
   const r = ringkas(
     penjualan.filter((j) => j.tanggal === hariIni),
-    biaya.filter((b) => b.tanggal === hariIni),
+    pengeluaran.filter((b) => b.tanggal === hariIni),
   )
   const menipis = produk.filter((p) => p.stok <= p.batas).sort((a, b) => a.stok - b.stok)
 
@@ -65,8 +65,8 @@ export default function Beranda() {
               <Link to="/masuk" className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white text-sm font-semibold text-stone-700 hover:border-stone-300">
                 <Ikon d={IK.masuk} className="h-5 w-5 text-brand-700" /> Barang masuk
               </Link>
-              <Link to="/biaya/baru" className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white text-sm font-semibold text-stone-700 hover:border-stone-300">
-                <Ikon d={IK.biaya} className="h-5 w-5 text-brand-700" /> Catat biaya
+              <Link to="/pengeluaran/baru" className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white text-sm font-semibold text-stone-700 hover:border-stone-300">
+                <Ikon d={IK.pengeluaran} className="h-5 w-5 text-brand-700" /> Catat pengeluaran
               </Link>
             </div>
 

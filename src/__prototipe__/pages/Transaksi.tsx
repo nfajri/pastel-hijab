@@ -16,7 +16,7 @@ function kelompok<T extends { tanggal: string }>(xs: T[]) {
 export default function Transaksi() {
   const st = useStore()
   const [sp, setSp] = useSearchParams()
-  const tab = (sp.get('tab') as 'jual' | 'biaya') ?? 'jual'
+  const tab = (sp.get('tab') as 'jual' | 'pengeluaran') ?? 'jual'
   const [saluran, setSaluran] = useState('semua')
 
   const js = st.penjualan.filter((j) => saluran === 'semua' || j.saluranId === saluran)
@@ -31,8 +31,8 @@ export default function Transaksi() {
               <Ikon d={IK.plus} /> Catat penjualan
             </Link>
           ) : (
-            <Link to="/biaya/baru" className="hidden min-h-11 items-center gap-2 rounded-xl bg-brand-700 px-4 font-semibold text-white hover:bg-brand-600 md:inline-flex">
-              <Ikon d={IK.plus} /> Catat biaya
+            <Link to="/pengeluaran/baru" className="hidden min-h-11 items-center gap-2 rounded-xl bg-brand-700 px-4 font-semibold text-white hover:bg-brand-600 md:inline-flex">
+              <Ikon d={IK.plus} /> Catat pengeluaran
             </Link>
           )
         }
@@ -41,7 +41,7 @@ export default function Transaksi() {
         <Tabs
           items={[
             { key: 'jual', label: 'Penjualan' },
-            { key: 'biaya', label: 'Biaya' },
+            { key: 'pengeluaran', label: 'Pengeluaran' },
           ]}
           value={tab}
           onChange={(t) => setSp(t === 'jual' ? {} : { tab: t }, { replace: true })}
@@ -110,22 +110,22 @@ export default function Transaksi() {
         </>
       )}
 
-      {(st.mode === 'normal' || st.mode === 'kosong') && tab === 'biaya' && (
+      {(st.mode === 'normal' || st.mode === 'kosong') && tab === 'pengeluaran' && (
         <>
-          {st.biaya.length === 0 ? (
+          {st.pengeluaran.length === 0 ? (
             <Kosong
-              ikon={IK.biaya}
-              judul="Belum ada biaya"
+              ikon={IK.pengeluaran}
+              judul="Belum ada pengeluaran"
               teks="Catat sewa lapak, iklan, atau packaging massal supaya laba bersih akurat."
               aksi={
-                <Link to="/biaya/baru" className="inline-flex min-h-11 items-center rounded-xl bg-brand-700 px-4 font-semibold text-white">
-                  Catat biaya
+                <Link to="/pengeluaran/baru" className="inline-flex min-h-11 items-center rounded-xl bg-brand-700 px-4 font-semibold text-white">
+                  Catat pengeluaran
                 </Link>
               }
             />
           ) : (
             <div className="divide-y divide-stone-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
-              {st.biaya.map((b) => (
+              {st.pengeluaran.map((b) => (
                 <div key={b.id} className="flex min-h-14 items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-ink">{b.kategori}</p>
@@ -144,11 +144,11 @@ export default function Transaksi() {
 
       {/* Tombol tambah melayang di HP */}
       <Link
-        to={tab === 'jual' ? '/jual' : '/biaya/baru'}
-        aria-label={tab === 'jual' ? 'Catat penjualan' : 'Catat biaya'}
+        to={tab === 'jual' ? '/jual' : '/pengeluaran/baru'}
+        aria-label={tab === 'jual' ? 'Catat penjualan' : 'Catat pengeluaran'}
         className="fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 flex h-14 items-center gap-2 rounded-2xl bg-brand-700 px-5 font-semibold text-white shadow-lg md:hidden"
       >
-        <Ikon d={IK.plus} className="h-6 w-6" strokeWidth={2.2} /> {tab === 'jual' ? 'Catat' : 'Biaya'}
+        <Ikon d={IK.plus} className="h-6 w-6" strokeWidth={2.2} /> {tab === 'jual' ? 'Catat' : 'Pengeluaran'}
       </Link>
     </>
   )

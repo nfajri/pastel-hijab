@@ -14,7 +14,7 @@ export default function Pengaturan() {
     { to: '/pengaturan/saluran', ikon: IK.saluran, judul: 'Saluran & potongan', sub: `${st.saluran.filter((s) => s.aktif).length} saluran aktif` },
     { to: '/pengaturan/modal', ikon: IK.modal, judul: 'Komponen modal', sub: `${st.komponenModal.filter((k) => k.aktif).length} komponen aktif` },
     { to: '/pengaturan/pembulatan', ikon: IK.bulat, judul: 'Pembulatan harga', sub: PEMBULATAN.find((b) => b.key === st.pembulatan)!.label },
-    { to: '/pengaturan/biaya', ikon: IK.tag, judul: 'Kategori biaya', sub: st.kategoriBiaya.join(', ') },
+    { to: '/pengaturan/pengeluaran', ikon: IK.tag, judul: 'Kategori pengeluaran', sub: st.kategoriPengeluaran.join(', ') },
   ]
   return (
     <div className="md:max-w-2xl">
@@ -165,7 +165,7 @@ export function DetailSaluran() {
             )
           }
         >
-          {s.potongan.length === 0 && <p className="px-4 py-4 text-sm text-stone-500">Tanpa potongan. Sewa lapak dicatat sebagai biaya, bukan potongan.</p>}
+          {s.potongan.length === 0 && <p className="px-4 py-4 text-sm text-stone-500">Tanpa potongan. Sewa lapak dicatat sebagai pengeluaran, bukan potongan.</p>}
           {s.potongan.map((k) => (
             <button key={k.id} type="button" onClick={() => setEdit(k)} className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50">
               <div className="min-w-0 flex-1">
@@ -293,14 +293,14 @@ export function PembulatanPage() {
   )
 }
 
-export function KategoriBiayaPage() {
+export function KategoriPengeluaranPage() {
   const st = useStore()
   const [baru, setBaru] = useState('')
   return (
     <div className="md:max-w-2xl">
-      <BilahAtas judul="Kategori biaya" kembali="/pengaturan" />
+      <BilahAtas judul="Kategori pengeluaran" kembali="/pengaturan" />
       <Daftar>
-        {st.kategoriBiaya.map((k) => (
+        {st.kategoriPengeluaran.map((k) => (
           <div key={k} className="flex min-h-14 items-center px-4 py-3 font-medium text-ink">
             {k}
           </div>
@@ -313,7 +313,7 @@ export function KategoriBiayaPage() {
         <Button
           disabled={!baru.trim()}
           onClick={() => {
-            st.update('kategoriBiaya', [...st.kategoriBiaya, baru.trim()])
+            st.update('kategoriPengeluaran', [...st.kategoriPengeluaran, baru.trim()])
             setBaru('')
           }}
         >

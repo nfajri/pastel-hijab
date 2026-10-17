@@ -1,4 +1,4 @@
-// Opsi B — "Ketuk produk": daftar produk langsung terbuka, ketuk + untuk menambah, periksa lalu simpan.
+// Desain final (Opsi B, T-0130) — "Ketuk produk": daftar produk langsung terbuka, ketuk + untuk menambah, periksa lalu simpan.
 import { useState } from 'react'
 import { Button, RupiahInput, Sheet } from '../../../components/ui'
 import { rp } from '../../lib/hitung'

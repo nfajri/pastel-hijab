@@ -27,7 +27,7 @@ export const IK = {
   cari: 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-4.3-4.3',
   masuk: 'M12 3v12M7 10l5 5 5-5M5 21h14',
   stok: 'M4 7h16M4 12h16M4 17h7M17 15v6M14 18h6',
-  biaya: 'M3 7h18v12H3zM3 11h18M7 15h3',
+  pengeluaran: 'M3 7h18v12H3zM3 11h18M7 15h3',
   ekspor: 'M12 15V3M7 8l5-5 5 5M5 21h14',
   cek: 'M5 12l5 5L20 7',
   peringatan: 'M12 9v4M12 17h.01M10.3 3.9L2 18a2 2 0 001.7 3h16.6a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z',

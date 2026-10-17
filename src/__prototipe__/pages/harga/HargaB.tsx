@@ -1,4 +1,4 @@
-// Opsi B — "Semua saluran sekaligus": satu target untuk semua saluran; tiap saluran punya kolom harga
+// Desain final (Opsi B, T-0130) — "Semua saluran sekaligus": satu target untuk semua saluran; tiap saluran punya kolom harga
 // yang terisi saran dan bisa diketik ulang (otomatis jadi mode cek).
 import { useState } from 'react'
 import { Button, RupiahInput } from '../../../components/ui'

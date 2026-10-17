@@ -1,4 +1,4 @@
-import type { Biaya, Penjualan } from './data'
+import type { Pengeluaran, Penjualan } from './data'
 
 export function omzet(j: Penjualan) {
   return j.baris.reduce((t, b) => t + b.qty * b.harga, 0)
@@ -18,18 +18,18 @@ export interface Ringkasan {
   potongan: number
   hpp: number
   labaKotor: number
-  biaya: number
+  pengeluaran: number
   labaBersih: number
   pesanan: number
   pcs: number
 }
 
-export function ringkas(js: Penjualan[], bs: Biaya[]): Ringkasan {
+export function ringkas(js: Penjualan[], bs: Pengeluaran[]): Ringkasan {
   const o = js.reduce((t, j) => t + omzet(j), 0)
   const p = js.reduce((t, j) => t + j.potongan, 0)
   const h = js.reduce((t, j) => t + hpp(j), 0)
   const b = bs.reduce((t, x) => t + x.jumlah, 0)
-  return { omzet: o, potongan: p, hpp: h, labaKotor: o - p - h, biaya: b, labaBersih: o - p - h - b, pesanan: js.length, pcs: js.reduce((t, j) => t + pcs(j), 0) }
+  return { omzet: o, potongan: p, hpp: h, labaKotor: o - p - h, pengeluaran: b, labaBersih: o - p - h - b, pesanan: js.length, pcs: js.reduce((t, j) => t + pcs(j), 0) }
 }
 
 export type Periode = 'hari' | 'minggu' | 'bulan' | 'rentang'

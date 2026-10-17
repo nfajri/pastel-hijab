@@ -13,7 +13,7 @@ export interface Item {
   hargaDiubah: boolean
 }
 
-/** State bersama layar catat penjualan (Opsi A & B). */
+/** State bersama layar catat penjualan. */
 export function useKeranjang() {
   const st = useStore()
   const nav = useNavigate()
