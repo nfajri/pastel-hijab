@@ -6,7 +6,7 @@ export default function Pengaturan() {
     <>
       <PageHeader title="Pengaturan" subtitle="Saluran, komponen potongan, dan akun." />
       <Card>
-        <p className="text-sm text-slate-500">Placeholder — isi halaman Pengaturan dibuat setelah desain disetujui.</p>
+        <p className="text-sm text-stone-500">Placeholder — isi halaman Pengaturan dibuat setelah desain disetujui.</p>
       </Card>
     </>
   )

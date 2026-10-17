@@ -6,7 +6,7 @@ const VARIANTS: Record<Variant, string> = {
   primary: 'bg-brand-700 text-white hover:bg-brand-600 active:bg-brand-600',
   secondary: 'bg-white text-brand-700 border border-brand-500 hover:bg-brand-50',
   danger: 'bg-red-600 text-white hover:bg-red-500',
-  ghost: 'text-slate-700 hover:bg-slate-100',
+  ghost: 'text-stone-700 hover:bg-stone-100',
 }
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
