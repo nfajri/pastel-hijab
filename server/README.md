@@ -72,6 +72,9 @@ lainnya (ikon) → 1 hari.
 
 ## API
 
+Kontrak lengkap untuk frontend (tipe respons, semua modul termasuk penjualan, kalkulator, pengeluaran, laporan, ekspor Excel):
+[`API.md`](API.md). Ringkasan tahap 1 di bawah.
+
 Semua body & respons JSON. Error: `{"error": "pesan untuk pengguna"}` dengan kode 400 (input), 401 (belum login),
 403, 404, 409 (bentrok stok/data), 415, 429. Field tak dikenal di body ditolak 400.
 `PATCH` = ubah sebagian (field yang tidak dikirim tetap; `null` untuk mengosongkan field yang boleh kosong).
@@ -142,8 +145,8 @@ Bila stok habis karena penarikan, modal kembali ke `modal_sebelum` (modal produk
 - `main.go` — perintah CLI & konfigurasi env
 - `build.sh` — build frontend + embed + binary `out/pastel`
 - `internal/web` — embed `dist/` (diisi build.sh, tidak di-commit)
-- `internal/hitung` — rumus murni modal (§5.2) + uji §7 butir 3 & 4
+- `internal/hitung` — rumus murni: modal (§5.2, uji §7 butir 3 & 4), harga/pembulatan/potongan pesanan (§5.4, uji butir 5–8, 15, 17)
 - `internal/db` — buka SQLite, migrasi berversi (`migrations/NNNN_*.sql`, tabel `schema_migrations`), backup
-- `internal/app` — HTTP: auth, modul, penyaji frontend; `app_test.go` = uji API end-to-end (server TLS + DB sementara)
+- `internal/app` — HTTP: auth, modul, penyaji frontend, ekspor Excel (excelize); `app_test.go`/`tahap2_test.go` = uji API end-to-end (server TLS + DB sementara)
 
 Migrasi baru: tambah file `internal/db/migrations/0002_nama.sql` (jangan ubah file yang sudah dirilis).

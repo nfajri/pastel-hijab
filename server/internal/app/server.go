@@ -88,6 +88,30 @@ func (s *Server) routes() {
 	m.Handle("POST /api/penyesuaian-stok", handler(s.createPenyesuaian))
 	m.Handle("DELETE /api/penyesuaian-stok/{id}", handler(s.deletePenyesuaian))
 
+	m.Handle("GET /api/penjualan", handler(s.listPenjualan))
+	m.Handle("POST /api/penjualan", handler(s.createPenjualan))
+	m.Handle("POST /api/penjualan/hitung", handler(s.hitungPenjualan))
+	m.Handle("GET /api/penjualan/{id}", handler(s.getPenjualan))
+	m.Handle("PUT /api/penjualan/{id}", handler(s.updatePenjualan))
+	m.Handle("DELETE /api/penjualan/{id}", handler(s.deletePenjualan))
+
+	m.Handle("POST /api/kalkulator", handler(s.kalkulator))
+
+	m.Handle("GET /api/kategori-pengeluaran", handler(s.listKategoriPengeluaran))
+	m.Handle("POST /api/kategori-pengeluaran", handler(s.createKategoriPengeluaran))
+	m.Handle("PATCH /api/kategori-pengeluaran/{id}", handler(s.patchKategoriPengeluaran))
+	m.Handle("DELETE /api/kategori-pengeluaran/{id}", handler(s.deleteKategoriPengeluaran))
+	m.Handle("GET /api/pengeluaran", handler(s.listPengeluaran))
+	m.Handle("POST /api/pengeluaran", handler(s.createPengeluaran))
+	m.Handle("GET /api/pengeluaran/{id}", handler(s.getPengeluaran))
+	m.Handle("PUT /api/pengeluaran/{id}", handler(s.updatePengeluaran))
+	m.Handle("DELETE /api/pengeluaran/{id}", handler(s.deletePengeluaran))
+
+	m.Handle("GET /api/laporan", handler(s.getLaporan))
+	m.Handle("GET /api/ekspor/produk.xlsx", handler(s.eksporProduk))
+	m.Handle("GET /api/ekspor/transaksi.xlsx", handler(s.eksporTransaksi))
+	m.Handle("GET /api/ekspor/laporan.xlsx", handler(s.eksporLaporan))
+
 	m.Handle("/api/", handler(func(w http.ResponseWriter, r *http.Request) error {
 		return errf(http.StatusNotFound, "endpoint tidak ditemukan")
 	}))

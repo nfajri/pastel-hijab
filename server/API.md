@@ -1,9 +1,10 @@
-# Kontrak API Pastel Hijab — tahap 1
+# Kontrak API Pastel Hijab
 
-Status: **stabil untuk tahap 1** (T-0131: auth, pengaturan, komponen modal, saluran & potongan, produk & harga,
-barang masuk, penyesuaian stok). Modul berikutnya (penjualan, kalkulator, **pengeluaran**, laporan) akan ditambahkan
-di dokumen ini tanpa mengubah bentuk endpoint di bawah. Perubahan yang bisa merusak frontend akan dicatat di bagian
-"Riwayat" paling bawah.
+Status: **lengkap untuk v1**.
+- Tahap 1 (T-0131): auth, pengaturan, komponen modal, saluran & potongan, produk & harga, barang masuk, penyesuaian stok.
+- Tahap 2 (T-0135): penjualan, kalkulator harga, pengeluaran & kategorinya, laporan, ekspor Excel, target harga per saluran.
+
+Perubahan yang bisa merusak frontend akan dicatat di bagian "Riwayat" paling bawah.
 
 ## Aturan umum
 
@@ -63,7 +64,7 @@ type Pengaturan = { pembulatan_bawaan: "tanpa" | "100" | "500" | "1000" | "canti
 - `GET /api/pengaturan` → `Pengaturan`
 - `PATCH /api/pengaturan` `{pembulatan_bawaan}` → `Pengaturan`
 
-(Kategori pengeluaran untuk chip di `/pengeluaran/baru` akan ditambahkan di sini pada modul Pengeluaran.)
+Bawaan pembulatan dipakai kalkulator bila `pembulatan` tidak dikirim. Kategori pengeluaran: lihat bagian [Pengeluaran](#pengeluaran).
 
 ## Komponen modal (§5.2)
 
@@ -110,23 +111,37 @@ Data awal: Shopee, Tokopedia, TikTok Shop, Pasar Minggu (belum ada potongan; dii
 ## Produk & harga jual per saluran
 
 ```ts
-type HargaSaluran = { saluran_id: number; harga: number; updated_at: string }
+type CaraTarget = "persen_jual" | "persen_modal" | "rupiah"
+type HargaSaluran = {
+  saluran_id: number; harga: number;
+  target_cara: CaraTarget | null;  // disimpan "Pakai harga ini"; null = harga diisi tanpa target
+  target_nilai: number | null;     // 30 = 30% (persen_*), atau Rp (rupiah)
+  untung: number;                  // untung/pcs di harga ini dengan modal & potongan saluran SEKARANG (2 desimal)
+  di_bawah_target: boolean;        // target ada dan untung sekarang di bawahnya → lencana "Di bawah target"
+  updated_at: string;
+}
 type Produk = {
   id: number; nama: string; kategori: string;
   stok: number;                 // pcs, tidak pernah minus
   modal: number;                // modal/pcs rata-rata tertimbang, 2 desimal
   batas_stok_menipis: number;
   menipis: boolean;             // stok <= batas_stok_menipis
+  di_bawah_target: boolean;     // ada harga di saluran aktif yang di bawah target (Beranda "Harga di bawah target untung")
+  terjual_30_hari: number;      // pcs terjual 30 hari terakhir (urutan "terlaris" di /jual)
   aktif: boolean; created_at: string; updated_at: string;
   harga: HargaSaluran[];        // hanya saluran yang sudah diberi harga
 }
 ```
-- `GET /api/produk[?aktif=1&menipis=1&q=teks]` → `Produk[]` (`q` mencari di nama & kategori)
+`di_bawah_target` dihitung ulang setiap dibaca, jadi otomatis muncul setelah kulakan baru menaikkan modal
+(atau potongan saluran naik) dan hilang lagi setelah harga diperbarui.
+
+- `GET /api/produk[?aktif=1&menipis=1&di_bawah_target=1&q=teks]` → `Produk[]` (`q` mencari di nama & kategori)
 - `GET /api/produk/{id}` → `Produk`
 - `POST /api/produk` `{nama, kategori?, batas_stok_menipis?, aktif?}` → `201 Produk` (stok & modal mulai 0)
 - `PATCH /api/produk/{id}` `{nama?, kategori?, batas_stok_menipis?, aktif?}` → `Produk`. Stok/modal hanya berubah lewat transaksi.
-- `DELETE /api/produk/{id}` → `204`; `409` bila sudah punya riwayat stok (sarankan "Nonaktifkan").
-- `PUT /api/produk/{id}/harga/{saluran_id}` `{harga}` → `Produk` (tombol "Pakai harga ini" di kalkulator)
+- `DELETE /api/produk/{id}` → `204`; `409` bila sudah punya riwayat stok atau penjualan (sarankan "Nonaktifkan").
+- `PUT /api/produk/{id}/harga/{saluran_id}` `{harga, target_cara?, target_nilai?}` → `Produk` (tombol "Pakai harga ini").
+  Target dikirim berpasangan (dua-duanya atau tidak sama sekali); tidak dikirim = target dikosongkan.
 - `DELETE /api/produk/{id}/harga/{saluran_id}` → `204`
 
 ## Barang masuk (kulakan)
@@ -190,15 +205,186 @@ type Penyesuaian = {
   — tidak mengubah modal; stok tidak boleh minus (`409`).
 - `DELETE /api/penyesuaian-stok/{id}` → `204` (membatalkan, stok dikembalikan; `409` bila stok jadi minus)
 
-## Belum ada (modul berikutnya)
+## Penjualan (§5.5)
 
-- **Penjualan** (`/api/penjualan`): catat jual per saluran, potongan otomatis, untung per transaksi.
-- **Kalkulator harga** (`/api/kalkulator`): bisa juga dihitung di frontend; endpoint server menyusul agar rumusnya satu sumber.
-- **Pengeluaran** (`/api/pengeluaran` + kategori di pengaturan): jumlah Rp, kategori, tanggal, catatan.
-- **Laporan** (`/api/laporan`): omzet − potongan − modal terjual = laba kotor − pengeluaran = laba bersih.
+Satu penjualan = satu pesanan di satu saluran, bisa beberapa model.
 
-Selama belum ada, frontend boleh memakai data tiruan dari prototipe untuk layar-layar itu.
+```ts
+type BarisJual = {
+  id: number; produk_id: number; produk_nama: string;
+  qty: number; harga: number;     // harga jual/pcs final (Rp)
+  subtotal: number;               // qty × harga
+  hpp: number;                    // modal/pcs SAAT dijual (2 desimal), tidak ikut berubah bila modal berubah kemudian
+  hpp_total: number;              // qty × hpp
+  potongan: number;               // bagian baris dari potongan pesanan (sebanding subtotal), untuk laba per model
+  untung: number;                 // subtotal − potongan − hpp_total
+}
+type RincianPotonganJual = {
+  potongan_id: number | null;     // null bila komponennya sudah dihapus dari pengaturan
+  nama: string; jenis: Potongan["jenis"]; nilai: number; maks_rp: number | null;
+  rp: number;                     // rupiah komponen ini untuk pesanan ini (otomatis)
+}
+type Penjualan = {
+  id: number; tanggal: string; saluran_id: number; saluran_nama: string; catatan: string;
+  baris: BarisJual[];
+  qty: number;                    // total pcs
+  subtotal: number;               // "Total harga" (omzet)
+  potongan_otomatis: number;      // Σ rincian_potongan[].rp
+  potongan: number;               // final (= otomatis, atau "Potongan sebenarnya" yang diketik)
+  potongan_diubah: boolean;       // label "(diubah)"
+  rincian_potongan: RincianPotonganJual[];
+  uang_diterima: number;          // subtotal − potongan
+  hpp_total: number;              // "Modal (HPP)"
+  untung: number;                 // uang_diterima − hpp_total ("Untung (setelah modal)"), boleh negatif
+  created_at: string; updated_at: string;
+}
+type PenjualanInput = {
+  tanggal?: string;               // kosong = hari ini; tidak boleh setelah hari ini
+  saluran_id: number;
+  catatan?: string;
+  potongan?: number;              // tidak dikirim = otomatis; dikirim = potongan sebenarnya (mis. ada voucher)
+  baris: Array<{ produk_id: number; qty: number; harga?: number }>;  // harga tidak dikirim = harga produk di saluran ini
+}
+```
+- `GET /api/penjualan[?dari=&sampai=&saluran_id=&produk_id=&limit=200]` → `Penjualan[]` (terbaru dulu, limit maks 5000).
+  "Saluran terakhir dipakai" = `GET /api/penjualan?limit=1`.
+- `GET /api/penjualan/{id}` → `Penjualan`
+- `POST /api/penjualan` `PenjualanInput` → `201 Penjualan`. Stok semua baris berkurang dalam satu transaksi.
+- `POST /api/penjualan/hitung` `PenjualanInput` (+ `id?` untuk pratinjau edit) → `200 Penjualan` dengan `id: 0`:
+  hitungan & cek stok persis seperti simpan, **tanpa menyimpan**. Cocok untuk layar "Periksa".
+- `PUT /api/penjualan/{id}` `PenjualanInput` → `Penjualan`. Stok versi lama dikembalikan dulu, lalu versi baru dicek & diterapkan.
+  Model yang sudah ada di versi lama tetap memakai `hpp` lamanya; model baru memakai modal sekarang.
+- `DELETE /api/penjualan/{id}` → `204` ("Penjualan dihapus, stok dikembalikan."). Modal produk tidak berubah.
+
+Aturan:
+- **Potongan otomatis per pesanan** (K-12): `persen` = % × subtotal pesanan (dibatasi `maks_rp` per pesanan), `per_pesanan` sekali
+  (2 pcs dengan Rp1.250/pesanan → Rp1.250, bukan Rp2.500), `per_pcs` × total qty. Hanya komponen aktif. Tiap komponen dibulatkan
+  ke rupiah, `potongan_otomatis` = jumlahnya (jadi rincian selalu cocok dengan totalnya).
+- Model nonaktif, saluran nonaktif, model yang sama dua kali, `qty` < 1, tanggal depan → `400`.
+- Harga tidak dikirim dan belum ada harga di saluran itu → `400 "Harga {model} di {saluran} belum diatur. Isi harga"`.
+- **Stok kurang (K-11)** → seluruh pesanan ditolak, stok tidak berubah:
+  ```json
+  409 {"error": "Stok tidak cukup. Pashmina Ceruty: stok tersisa 3",
+       "stok_kurang": [{"produk_id": 1, "produk_nama": "Pashmina Ceruty", "qty": 4, "stok": 3, "pesan": "Stok tersisa 3"}]}
+  ```
+  `pesan` = `"Stok tersisa N"` atau `"Stok habis"`, satu entri per baris yang kurang (untuk teks merah per baris).
+  Saat edit, `stok` = stok yang tersedia untuk pesanan ini (stok sekarang + qty lama).
+
+## Kalkulator harga (§5.4)
+
+Tidak menyimpan apa pun. "Pakai harga ini" = `PUT /api/produk/{id}/harga/{saluran_id}` dengan `target_cara` & `target_nilai`.
+
+`POST /api/kalkulator`
+```ts
+type KalkulatorInput = {
+  produk_id?: number;             // salah satu: produk_id (modal produk sekarang) atau modal
+  modal?: number;
+  cara: CaraTarget; nilai: number;            // 30 = 30%, atau Rp untuk "rupiah"
+  pembulatan?: "tanpa" | "100" | "500" | "1000" | "cantik";   // kosong = bawaan Pengaturan
+  saluran_id?: number;            // kosong = semua saluran aktif (satu kartu per saluran)
+  cek?: Array<{ saluran_id: number; harga: number }>;         // mode cek: harga yang diketik Ibu per kartu
+}
+type KartuSaluran = {
+  saluran_id: number; saluran_nama: string;
+  tercapai: boolean;              // false = target tidak bisa dicapai (potongan % + target % ≥ 100%)
+  pesan: string;                  // penjelasan bila tidak tercapai, mis. "Potongan saluran 10% + target 90% = 100%. Jumlahnya harus di bawah 100%, turunkan target untung."
+  mentah: number | null;          // harga target sebelum pembulatan (ke atas ke rupiah)
+  saran: number | null;           // harga saran, sudah dibulatkan ke atas
+  minimal: number | null;         // harga impas ("Minimal Rp…"); null bila potongan % ≥ 100%
+  harga_sekarang: number | null;  // harga tersimpan ("· sekarang Rp…"), hanya bila produk_id
+  target_sekarang: { cara: CaraTarget; nilai: number } | null;
+  cek: boolean;                   // true = kartu menilai harga ketikan
+  harga: number | null;           // harga yang dinilai (ketikan, atau saran); null bila tidak tercapai & tidak cek
+  rincian: null | {
+    harga: number; modal: number;
+    potongan: Array<{ potongan_id: number; nama: string; jenis: Potongan["jenis"]; nilai: number; maks_rp: number | null; rp: number }>;
+    total_potongan: number; untung: number;
+    persen_jual: number; persen_modal: number;   // 2 desimal
+  };
+  status: "sesuai_target" | "di_bawah_target" | "rugi" | "tidak_tercapai";
+  kurang_rp: number;              // status rugi: minimal − harga ("Rugi · kurang Rp…"), selain itu 0
+}
+type KalkulatorHasil = { produk_id: number | null; modal: number; cara: CaraTarget; nilai: number; pembulatan: string; saluran: KartuSaluran[] }
+```
+Rumus (sama dengan `src/__prototipe__/lib/hitung.ts`): asumsi 1 pcs per pesanan (K-12); p = total % potongan, f = Rp per pesanan + Rp per pcs.
+Impas = (M + f) ÷ (1 − p); % jual: (M + f) ÷ (1 − p − m); % modal: (M + f + k·M) ÷ (1 − p); Rp: (M + f + R) ÷ (1 − p).
+Potongan % yang melewati `maks_rp` dihitung ulang sebagai Rp tetap. Pembulatan selalu ke atas; harga cantik = ⌈(H + 100) ÷ 1.000⌉ × 1.000 − 100.
+
+Contoh (§7 butir 5): modal 25.000, Shopee 10% + Rp1.250/pesanan, `{"produk_id": 1, "cara": "persen_jual", "nilai": 30}` →
+kartu Shopee `mentah 43750, saran 44000, minimal 29167, status "sesuai_target"`, rincian potongan 4.400 + 1.250, untung 13.350 (30,34%).
+Dengan `cek: [{"saluran_id": 1, "harga": 28000}]` → `status "rugi", kurang_rp 1167`.
+
+## Pengeluaran
+
+```ts
+type KategoriPengeluaran = { id: number; nama: string; aktif: boolean; urutan: number; created_at: string; updated_at: string }
+type Pengeluaran = {
+  id: number; tanggal: string; kategori_id: number; kategori_nama: string;
+  jumlah: number;                 // Rp, > 0
+  catatan: string; created_at: string; updated_at: string;
+}
+```
+Kategori bawaan: Sewa lapak, Iklan, Packaging massal, Lain-lain.
+- `GET /api/kategori-pengeluaran[?aktif=1]` → `KategoriPengeluaran[]` (chip di `/pengeluaran/baru`)
+- `POST /api/kategori-pengeluaran` `{nama, aktif?, urutan?}` → `201` (urutan bawaan = paling akhir; nama dobel → 409)
+- `PATCH /api/kategori-pengeluaran/{id}` `{nama?, aktif?, urutan?}` → `KategoriPengeluaran`
+- `DELETE /api/kategori-pengeluaran/{id}` → `204`; `409` bila sudah dipakai (nonaktifkan saja)
+- `GET /api/pengeluaran[?dari=&sampai=&kategori_id=&limit=200]` → `Pengeluaran[]` (terbaru dulu)
+- `GET /api/pengeluaran/{id}` → `Pengeluaran`
+- `POST /api/pengeluaran` `{jumlah, kategori_id, tanggal?, catatan?}` → `201 Pengeluaran`
+  (jumlah 0/kosong → `400 "Isi jumlah pengeluaran"`; kategori nonaktif / tanggal depan → 400)
+- `PUT /api/pengeluaran/{id}` (body sama) → `Pengeluaran` (kategori lama boleh tetap dipakai walau sudah nonaktif)
+- `DELETE /api/pengeluaran/{id}` → `204`
+
+## Laporan (§5.6)
+
+`GET /api/laporan[?dari=&sampai=&saluran_id=&produk_id=]` — bawaan: awal bulan ini s/d hari ini. Periode "Hari ini" =
+`dari=sampai=hari ini` (juga untuk kartu "Penjualan hari ini" di Beranda); "Minggu ini" = Senin s/d hari ini (dihitung frontend).
+
+```ts
+type AngkaJual = {
+  pesanan: number; pcs: number;
+  omzet: number;                  // Σ qty × harga
+  potongan: number;               // potongan saluran (final)
+  hpp: number;                    // modal barang terjual (2 desimal)
+  laba_kotor: number;             // omzet − potongan − hpp
+}
+type Laporan = {
+  dari: string; sampai: string; saluran_id: number | null; produk_id: number | null;
+  ringkasan: AngkaJual & {
+    pengeluaran: number | null;   // null bila filter saluran/model aktif
+    laba_bersih: number | null;   // laba_kotor − pengeluaran; null bila filter aktif
+  };
+  per_saluran: Array<AngkaJual & { saluran_id: number; saluran_nama: string }>;   // urut saluran
+  per_produk: Array<AngkaJual & { produk_id: number; produk_nama: string; kategori: string }>;  // laba kotor terbesar dulu
+  pengeluaran_per_kategori: Array<{ kategori_id: number; kategori_nama: string; jumlah: number }>;
+  stok: {
+    total_pcs: number; nilai_stok: number;          // Σ stok × modal
+    produk: StokModel[];                            // produk aktif + nonaktif yang masih punya stok
+    menipis: StokModel[];                           // produk aktif dengan stok ≤ batas
+  };
+}
+type StokModel = { produk_id: number; produk_nama: string; kategori: string; stok: number; modal: number;
+                   nilai_stok: number; batas_stok_menipis: number; menipis: boolean; aktif: boolean }
+```
+- Filter saluran/model menyaring baris penjualan; `potongan` per model memakai bagian baris (`BarisJual.potongan`), jadi
+  per saluran dan per model selalu berjumlah sama dengan ringkasan tanpa filter. `stok` tidak ikut difilter.
+- Bila filter aktif, frontend menampilkan **Laba kotor** sebagai angka utama dan catatan "Pengeluaran tidak dibagi per saluran/model, …".
+- Laba boleh negatif (tampilkan merah dengan "−").
+
+## Ekspor Excel (§7 butir 14)
+
+Unduh biasa (`<a href>` / `window.location`), cookie sesi ikut terkirim. Respons `.xlsx` + `Content-Disposition: attachment`.
+- `GET /api/ekspor/laporan.xlsx[?dari=&sampai=&saluran_id=&produk_id=]` — "Laporan periode ini": sheet Ringkasan, Per saluran, Per model, Pengeluaran, Stok.
+- `GET /api/ekspor/transaksi.xlsx[?dari=&sampai=]` — "Semua transaksi" (tanpa tanggal = semua): sheet Penjualan (per baris),
+  Rincian potongan, Pengeluaran, Barang masuk, Penyesuaian stok.
+- `GET /api/ekspor/produk.xlsx` — "Daftar produk": sheet Produk (stok, modal, nilai stok, harga & untung per saluran) dan Harga per saluran (dengan target).
+
+Angka disimpan sebagai angka (bisa dijumlah di Excel), rupiah berformat `#,##0`.
 
 ## Riwayat
 
 - 17 Okt 2026 — versi pertama (T-0131).
+- 17 Okt 2026 — tahap 2 (T-0135): penjualan, kalkulator, pengeluaran, laporan, ekspor. Tambahan di tahap 1 (tidak merusak):
+  `HargaSaluran` + `target_cara/target_nilai/untung/di_bawah_target`, `Produk` + `di_bawah_target/terjual_30_hari`,
+  `PUT .../harga` menerima target, `GET /api/produk?di_bawah_target=1`; produk yang sudah terjual juga tidak bisa dihapus (409).

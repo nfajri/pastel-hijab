@@ -26,8 +26,9 @@ func fmtTime(t time.Time) string { return t.UTC().Format(timeFmt) }
 
 // httpError adalah error yang pesannya aman ditampilkan ke pengguna.
 type httpError struct {
-	code int
-	msg  string
+	code  int
+	msg   string
+	extra map[string]any // field tambahan di body error (mis. stok_kurang per produk)
 }
 
 func (e *httpError) Error() string { return e.msg }
@@ -50,7 +51,11 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	var he *httpError
 	if errors.As(err, &he) {
-		writeJSON(w, he.code, map[string]string{"error": he.msg})
+		body := map[string]any{"error": he.msg}
+		for k, v := range he.extra {
+			body[k] = v
+		}
+		writeJSON(w, he.code, body)
 		return
 	}
 	log.Printf("ERROR %s %s: %v", r.Method, r.URL.Path, err)
