@@ -71,6 +71,7 @@ function KartuSaluran({ k, s, harga, setHarga }: { k: Kalk; s: Saluran; harga: n
         ) : (
           <Button
             variant={r && r.harga < minimal ? 'secondary' : 'primary'}
+            className="whitespace-nowrap"
             disabled={!nilai}
             onClick={() => {
               k.st.pakaiHarga(p.id, s.id, nilai!, k.cara, k.nilai ?? 0)
