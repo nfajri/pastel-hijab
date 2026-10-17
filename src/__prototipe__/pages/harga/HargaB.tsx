@@ -30,17 +30,17 @@ function KartuSaluran({ k, s, harga, setHarga }: { k: Kalk; s: Saluran; harga: n
   return (
     <section className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-slate-900">{s.nama}</h3>
+        <h3 className="text-base font-semibold text-ink">{s.nama}</h3>
         {status}
       </div>
       <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
         <RupiahInput aria-label={`Harga jual ${s.nama}`} value={nilai} onValueChange={setHarga} className="text-lg font-semibold" />
         <div className="pb-1 text-right">
-          <p className="text-xs text-slate-500">Untung</p>
+          <p className="text-xs text-stone-500">Untung</p>
           <p className={`font-bold whitespace-nowrap tabular-nums ${r && r.untung < 0 ? 'text-red-700' : 'text-emerald-700'}`}>{r ? rp(r.untung) : '—'}</p>
         </div>
       </div>
-      <p className="mt-2 text-sm text-slate-500 tabular-nums">
+      <p className="mt-2 text-sm text-stone-500 tabular-nums">
         {diketik ? (
           <>
             Saran {hasil.ok ? rp(hasil.saran) : '—'} ·{' '}
@@ -56,16 +56,16 @@ function KartuSaluran({ k, s, harga, setHarga }: { k: Kalk; s: Saluran; harga: n
           </>
         )}
       </p>
-      <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
+      <div className="mt-3 flex items-center gap-2 border-t border-stone-100 pt-3">
         {r && (
-          <button type="button" onClick={() => setBuka(!buka)} aria-expanded={buka} className="flex min-h-11 items-center gap-1 pr-2 text-sm font-semibold text-slate-600">
+          <button type="button" onClick={() => setBuka(!buka)} aria-expanded={buka} className="flex min-h-11 items-center gap-1 pr-2 text-sm font-semibold text-stone-600">
             Rincian
             <Ikon d={IK.kanan} className={`h-4 w-4 transition-transform ${buka ? 'rotate-90' : ''}`} />
           </button>
         )}
         <div className="flex-1" />
         {nilai && nilai === sekarang ? (
-          <span className="flex min-h-11 items-center gap-1.5 px-2 text-sm font-semibold text-slate-500">
+          <span className="flex min-h-11 items-center gap-1.5 px-2 text-sm font-semibold text-stone-500">
             <Ikon d={IK.cek} /> Sudah dipakai
           </span>
         ) : (
@@ -83,14 +83,14 @@ function KartuSaluran({ k, s, harga, setHarga }: { k: Kalk; s: Saluran; harga: n
         )}
       </div>
       {r && buka && (
-        <div className="mt-1 rounded-xl bg-slate-50 px-3 py-2 text-sm">
+        <div className="mt-1 rounded-xl bg-stone-50 px-3 py-2 text-sm">
           {[{ nama: 'Modal', nilai: r.modal }, ...r.potongan].map((x) => (
-            <div key={x.nama} className="flex justify-between py-1 text-slate-600">
+            <div key={x.nama} className="flex justify-between py-1 text-stone-600">
               <span>{x.nama}</span>
               <span className="tabular-nums">−{rp(x.nilai)}</span>
             </div>
           ))}
-          <div className="mt-1 flex justify-between border-t border-slate-200 pt-1.5 text-xs text-slate-500">
+          <div className="mt-1 flex justify-between border-t border-stone-200 pt-1.5 text-xs text-stone-500">
             <span>Untung % harga jual · % modal</span>
             <span className="tabular-nums">
               {fmtPersen(r.persenJual)} · {fmtPersen(r.persenModal)}
@@ -142,8 +142,8 @@ export default function HargaB() {
           className={`flex min-h-12 items-center gap-3 rounded-2xl border border-brand-100 bg-white px-4 py-2 text-left shadow-sm md:hidden ${atur ? 'hidden' : ''}`}
         >
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-slate-900">{teksTarget(k.cara, k.nilai ?? 0).replace(/^untung /, 'Target untung ')}</p>
-            <p className="text-xs text-slate-500 first-letter:uppercase">{teksBulatPendek(k.bulat)}</p>
+            <p className="truncate text-sm font-semibold text-ink">{teksTarget(k.cara, k.nilai ?? 0).replace(/^untung /, 'Target untung ')}</p>
+            <p className="text-xs text-stone-500 first-letter:uppercase">{teksBulatPendek(k.bulat)}</p>
           </div>
           <span className="text-sm font-semibold text-brand-700">Ubah</span>
         </button>
@@ -179,7 +179,7 @@ export default function HargaB() {
       </div>
 
       <div className="mt-4 flex flex-col gap-3 md:mt-0">
-        <p className="px-1 text-sm text-slate-500">Harga terisi saran. Ketik harga sendiri untuk mengecek untung-ruginya.</p>
+        <p className="px-1 text-sm text-stone-500">Harga terisi saran. Ketik harga sendiri untuk mengecek untung-ruginya.</p>
         <div className="grid gap-3 lg:grid-cols-2">
           {saluran.map((s) => (
             <KartuSaluran key={s.id + k.produkId} k={k} s={s} harga={ketik[s.id]} setHarga={(v) => setKetik((x) => ({ ...x, [s.id]: v }))} />

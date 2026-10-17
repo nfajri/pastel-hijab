@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useStore } from './lib/store'
+import logoTanda from '../assets/brand/logo-tanda.png'
 import { IK, Ikon } from './ui'
 
 // HP: 5 tab (6 tab dengan label 10px terlalu sempit di iPhone). Pengaturan lewat ikon di Beranda.
@@ -14,7 +15,10 @@ export const TAB = [
 function Sidebar() {
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-brand-100 bg-white md:flex">
-      <div className="px-5 pt-5 pb-4 text-lg font-bold text-brand-700">Toko Hijab</div>
+      <div className="flex items-center gap-2.5 px-5 pt-5 pb-4">
+        <img src={logoTanda} alt="" className="h-9 w-9" />
+        <span className="text-lg font-semibold tracking-tight text-ink">Pastel Hijab</span>
+      </div>
       <div className="px-3 pb-4">
         <Link to="/jual" className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 font-semibold text-white hover:bg-brand-600">
           <Ikon d={IK.plus} /> Catat penjualan
@@ -27,7 +31,7 @@ function Sidebar() {
             to={t.to}
             end={t.to === '/'}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${isActive ? 'bg-brand-100 text-brand-700' : 'text-slate-600 hover:bg-slate-50'}`
+              `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${isActive ? 'bg-brand-100 text-brand-700' : 'text-stone-600 hover:bg-stone-50'}`
             }
           >
             <Ikon d={t.ikon} className="h-6 w-6" />
@@ -35,8 +39,8 @@ function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <div className="mt-auto border-t border-brand-100 px-5 py-4 text-sm text-slate-500">
-        <div className="font-medium text-slate-700">Ibu Rahma</div>
+      <div className="mt-auto border-t border-brand-100 px-5 py-4 text-sm text-stone-500">
+        <div className="font-medium text-stone-700">Ibu Rahma</div>
         rahma.hijab@gmail.com
       </div>
     </aside>
@@ -49,7 +53,7 @@ function Toast() {
   if (!toast) return null
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-4 md:bottom-6" role="status" key={toast.id}>
-      <div className="pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-2xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg">
+      <div className="pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-sm text-white shadow-lg">
         <Ikon d={IK.cek} className="h-5 w-5 shrink-0 text-emerald-400" />
         <span className="min-w-0 flex-1">{toast.teks}</span>
         {toast.aksi && (
@@ -85,7 +89,7 @@ export function LayoutTab() {
             key={t.to}
             to={t.to}
             end={t.to === '/'}
-            className={({ isActive }) => `flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${isActive ? 'text-brand-700' : 'text-slate-500'}`}
+            className={({ isActive }) => `flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${isActive ? 'text-brand-700' : 'text-stone-500'}`}
           >
             <Ikon d={t.ikon} className="h-6 w-6" />
             <span className="truncate">{t.label}</span>

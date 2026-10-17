@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import logoTanda from '../../assets/brand/logo-tanda.png'
 import { tglPendek } from '../lib/data'
 import { rp } from '../lib/hitung'
 import { omzet, pcs, ringkas } from '../lib/laporan'
@@ -18,11 +19,14 @@ export default function Beranda() {
   return (
     <>
       <header className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-slate-500">Sabtu, 17 Oktober 2026</p>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Halo, Ibu Rahma</h1>
+        <div className="flex min-w-0 items-center gap-3">
+          <img src={logoTanda} alt="Pastel Hijab" className="h-11 w-11 shrink-0 md:hidden" />
+          <div className="min-w-0">
+            <p className="text-sm text-stone-500">Sabtu, 17 Oktober 2026</p>
+            <h1 className="text-2xl font-bold tracking-tight text-ink">Halo, Ibu Rahma</h1>
+          </div>
         </div>
-        <Link to="/pengaturan" aria-label="Pengaturan" className="flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 hover:bg-white md:hidden">
+        <Link to="/pengaturan" aria-label="Pengaturan" className="flex h-11 w-11 items-center justify-center rounded-xl text-stone-600 hover:bg-white md:hidden">
           <Ikon d={IK.pengaturan} className="h-6 w-6" />
         </Link>
       </header>
@@ -35,20 +39,20 @@ export default function Beranda() {
           <div className="flex flex-col gap-4">
             {/* Ringkasan hari ini */}
             <section className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm md:p-5">
-              <p className="text-sm font-medium text-slate-500">Penjualan hari ini</p>
-              <p className="mt-1 text-3xl font-bold tracking-tight text-slate-900 tabular-nums">{rp(r.omzet)}</p>
-              <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3">
+              <p className="text-sm font-medium text-stone-500">Penjualan hari ini</p>
+              <p className="mt-1 text-3xl font-bold tracking-tight text-ink tabular-nums">{rp(r.omzet)}</p>
+              <div className="mt-4 grid grid-cols-3 gap-2 border-t border-stone-100 pt-3">
                 <div>
-                  <p className="text-xs text-slate-500">Untung kotor</p>
+                  <p className="text-xs text-stone-500">Untung kotor</p>
                   <p className="font-semibold text-emerald-700 tabular-nums">{rp(r.labaKotor)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Pesanan</p>
-                  <p className="font-semibold text-slate-900 tabular-nums">{r.pesanan}</p>
+                  <p className="text-xs text-stone-500">Pesanan</p>
+                  <p className="font-semibold text-ink tabular-nums">{r.pesanan}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Terjual</p>
-                  <p className="font-semibold text-slate-900 tabular-nums">{r.pcs} pcs</p>
+                  <p className="text-xs text-stone-500">Terjual</p>
+                  <p className="font-semibold text-ink tabular-nums">{r.pcs} pcs</p>
                 </div>
               </div>
             </section>
@@ -58,10 +62,10 @@ export default function Beranda() {
               <Ikon d={IK.plus} className="h-6 w-6" strokeWidth={2.2} /> Catat penjualan
             </Link>
             <div className="grid grid-cols-2 gap-2">
-              <Link to="/masuk" className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:border-slate-300">
+              <Link to="/masuk" className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white text-sm font-semibold text-stone-700 hover:border-stone-300">
                 <Ikon d={IK.masuk} className="h-5 w-5 text-brand-700" /> Barang masuk
               </Link>
-              <Link to="/biaya/baru" className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:border-slate-300">
+              <Link to="/biaya/baru" className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white text-sm font-semibold text-stone-700 hover:border-stone-300">
                 <Ikon d={IK.biaya} className="h-5 w-5 text-brand-700" /> Catat biaya
               </Link>
             </div>
@@ -92,13 +96,13 @@ export default function Beranda() {
                     to={`/transaksi/${j.id}`}
                     kanan={
                       <div className="text-right">
-                        <p className="font-semibold text-slate-900 tabular-nums">{rp(omzet(j))}</p>
-                        <p className="text-xs text-slate-500">{pcs(j)} pcs</p>
+                        <p className="font-semibold text-ink tabular-nums">{rp(omzet(j))}</p>
+                        <p className="text-xs text-stone-500">{pcs(j)} pcs</p>
                       </div>
                     }
                   >
-                    <p className="truncate font-medium text-slate-900">{j.baris.map((b) => b.nama).join(', ')}</p>
-                    <p className="text-sm text-slate-500">
+                    <p className="truncate font-medium text-ink">{j.baris.map((b) => b.nama).join(', ')}</p>
+                    <p className="text-sm text-stone-500">
                       {namaSaluran(saluran, j.saluranId)} · {j.tanggal === hariIni ? j.jam : tglPendek(j.tanggal)}
                     </p>
                   </BarisLink>
@@ -113,8 +117,8 @@ export default function Beranda() {
                 <Daftar judul="Harga di bawah target untung">
                   {hargaBermasalah.map((x) => (
                     <BarisLink key={x.produk.id + x.saluran.id} to={`/harga?produk=${x.produk.id}&saluran=${x.saluran.id}`} kanan={<Lencana nada="peringatan">{x.saluran.nama}</Lencana>}>
-                      <p className="line-clamp-2 font-medium text-slate-900">{x.produk.nama}</p>
-                      <p className="text-sm text-slate-500 tabular-nums">Harga {rp(x.harga)} · modal naik</p>
+                      <p className="line-clamp-2 font-medium text-ink">{x.produk.nama}</p>
+                      <p className="text-sm text-stone-500 tabular-nums">Harga {rp(x.harga)} · modal naik</p>
                     </BarisLink>
                   ))}
                 </Daftar>
@@ -128,13 +132,13 @@ export default function Beranda() {
                 }
               >
                 {menipis.length === 0 ? (
-                  <p className="px-4 py-4 text-sm text-slate-500">Semua stok aman.</p>
+                  <p className="px-4 py-4 text-sm text-stone-500">Semua stok aman.</p>
                 ) : (
                   menipis.map((p) => (
                     <BarisLink key={p.id} to={`/produk/${p.id}`} kanan={<StokLencana stok={p.stok} batas={p.batas} />}>
                       <div className="flex items-center gap-3">
                         <Thumb nama={p.nama} kecil />
-                        <p className="line-clamp-2 min-w-0 font-medium text-slate-900">{p.nama}</p>
+                        <p className="line-clamp-2 min-w-0 font-medium text-ink">{p.nama}</p>
                       </div>
                     </BarisLink>
                   ))

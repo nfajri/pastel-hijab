@@ -6,7 +6,7 @@ export default function Produk() {
     <>
       <PageHeader title="Produk" subtitle="Daftar produk, stok, dan barang masuk." />
       <Card>
-        <p className="text-sm text-slate-500">Placeholder — isi halaman Produk dibuat setelah desain disetujui.</p>
+        <p className="text-sm text-stone-500">Placeholder — isi halaman Produk dibuat setelah desain disetujui.</p>
       </Card>
     </>
   )

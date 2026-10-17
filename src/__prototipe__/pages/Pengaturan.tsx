@@ -5,6 +5,7 @@ import type { Saluran } from '../lib/data'
 import { PEMBULATAN, labelModal, labelPotongan, type JenisModal, type JenisPotongan, type KomponenModal, type KomponenPotongan, type Pembulatan } from '../lib/hitung'
 import { useStore, type ModeData } from '../lib/store'
 import { BarisLink, BilahAtas, Daftar, IK, Ikon, KepalaHalaman, Label, Lencana, Saklar } from '../ui'
+import logoLengkap from '../../assets/brand/logo-lengkap.png'
 
 export default function Pengaturan() {
   const st = useStore()
@@ -32,8 +33,8 @@ export default function Pengaturan() {
                   <Ikon d={m.ikon} />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-slate-900">{m.judul}</p>
-                  <p className="truncate text-sm text-slate-500">{m.sub}</p>
+                  <p className="font-medium text-ink">{m.judul}</p>
+                  <p className="truncate text-sm text-stone-500">{m.sub}</p>
                 </div>
               </div>
             </BarisLink>
@@ -41,25 +42,25 @@ export default function Pengaturan() {
         </Daftar>
         <Daftar judul="Akun">
           <div className="flex items-center gap-3 px-4 py-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 text-stone-600">
               <Ikon d={IK.akun} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-medium text-slate-900">Ibu Rahma</p>
-              <p className="truncate text-sm text-slate-500">rahma.hijab@gmail.com</p>
+              <p className="font-medium text-ink">Ibu Rahma</p>
+              <p className="truncate text-sm text-stone-500">rahma.hijab@gmail.com</p>
             </div>
           </div>
           <BarisLink to="/pengaturan">
-            <p className="font-medium text-slate-900">Ganti kata sandi</p>
+            <p className="font-medium text-ink">Ganti kata sandi</p>
           </BarisLink>
           <button type="button" onClick={() => nav('/masuk-akun')} className="flex min-h-14 w-full items-center gap-3 px-4 text-left font-medium text-red-700 hover:bg-red-50">
             <Ikon d={IK.keluar} /> Keluar
           </button>
         </Daftar>
 
-        <section className="rounded-2xl border border-dashed border-slate-300 p-4">
-          <p className="text-sm font-semibold text-slate-700">Khusus prototipe: keadaan data</p>
-          <p className="mb-3 text-xs text-slate-500">Untuk melihat tampilan saat data kosong, sedang dimuat, atau gagal dimuat. Tidak ada di aplikasi asli.</p>
+        <section className="rounded-2xl border border-dashed border-stone-300 p-4">
+          <p className="text-sm font-semibold text-stone-700">Khusus prototipe: keadaan data</p>
+          <p className="mb-3 text-xs text-stone-500">Untuk melihat tampilan saat data kosong, sedang dimuat, atau gagal dimuat. Tidak ada di aplikasi asli.</p>
           <Tabs<ModeData>
             items={[
               { key: 'normal', label: 'Normal' },
@@ -84,15 +85,15 @@ export function DaftarSaluran() {
       <Daftar>
         {st.saluran.map((s) => (
           <BarisLink key={s.id} to={`/pengaturan/saluran/${s.id}`} kanan={!s.aktif ? <Lencana>Nonaktif</Lencana> : undefined}>
-            <p className="font-medium text-slate-900">{s.nama}</p>
-            <p className="truncate text-sm text-slate-500">{s.potongan.length ? s.potongan.map((k) => k.nama).join(' · ') : 'Tanpa potongan'}</p>
+            <p className="font-medium text-ink">{s.nama}</p>
+            <p className="truncate text-sm text-stone-500">{s.potongan.length ? s.potongan.map((k) => k.nama).join(' · ') : 'Tanpa potongan'}</p>
           </BarisLink>
         ))}
       </Daftar>
       <Button variant="secondary" block className="mt-4">
         <Ikon d={IK.plus} /> Tambah saluran
       </Button>
-      <p className="mt-4 px-1 text-sm text-slate-500">Aturan potongan marketplace sering berubah. Perbarui angkanya di sini; penjualan lama tidak ikut berubah.</p>
+      <p className="mt-4 px-1 text-sm text-stone-500">Aturan potongan marketplace sering berubah. Perbarui angkanya di sini; penjualan lama tidak ikut berubah.</p>
     </div>
   )
 }
@@ -149,8 +150,8 @@ export function DetailSaluran() {
       <div className="flex flex-col gap-5">
         <div className="flex items-center justify-between rounded-2xl border border-brand-100 bg-white px-4 py-3">
           <div>
-            <p className="font-medium text-slate-900">Saluran aktif</p>
-            <p className="text-sm text-slate-500">Saluran nonaktif tidak muncul saat mencatat penjualan.</p>
+            <p className="font-medium text-ink">Saluran aktif</p>
+            <p className="text-sm text-stone-500">Saluran nonaktif tidak muncul saat mencatat penjualan.</p>
           </div>
           <Saklar label="Saluran aktif" aktif={s.aktif} onChange={(v) => ubah({ ...s, aktif: v })} />
         </div>
@@ -158,20 +159,20 @@ export function DetailSaluran() {
           judul="Komponen potongan"
           aksi={
             s.potongan.length > 0 && (
-              <span className="text-sm text-slate-500 tabular-nums">
+              <span className="text-sm text-stone-500 tabular-nums">
                 Total {String(total).replace('.', ',')}%{rp.length ? ` + ${rp.map((k) => labelPotongan(k).split(' ')[0]).join(' + ')}` : ''}
               </span>
             )
           }
         >
-          {s.potongan.length === 0 && <p className="px-4 py-4 text-sm text-slate-500">Tanpa potongan. Sewa lapak dicatat sebagai biaya, bukan potongan.</p>}
+          {s.potongan.length === 0 && <p className="px-4 py-4 text-sm text-stone-500">Tanpa potongan. Sewa lapak dicatat sebagai biaya, bukan potongan.</p>}
           {s.potongan.map((k) => (
-            <button key={k.id} type="button" onClick={() => setEdit(k)} className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50">
+            <button key={k.id} type="button" onClick={() => setEdit(k)} className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50">
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-slate-900">{k.nama}</p>
-                <p className="text-sm text-slate-500">{labelPotongan(k)}</p>
+                <p className="font-medium text-ink">{k.nama}</p>
+                <p className="text-sm text-stone-500">{labelPotongan(k)}</p>
               </div>
-              <Ikon d={IK.kanan} className="h-4 w-4 text-slate-400" />
+              <Ikon d={IK.kanan} className="h-4 w-4 text-stone-400" />
             </button>
           ))}
         </Daftar>
@@ -216,13 +217,13 @@ export function KomponenModalPage() {
   return (
     <div className="md:max-w-2xl">
       <BilahAtas judul="Komponen modal" kembali="/pengaturan" />
-      <p className="mb-4 px-1 text-sm text-slate-500">Biaya yang ditambahkan ke harga beli saat barang masuk. Komponen nonaktif tidak muncul di kulakan baru.</p>
+      <p className="mb-4 px-1 text-sm text-stone-500">Biaya yang ditambahkan ke harga beli saat barang masuk. Komponen nonaktif tidak muncul di kulakan baru.</p>
       <Daftar>
         {st.komponenModal.map((k) => (
           <div key={k.id} className="flex min-h-14 items-center gap-3 px-4 py-3">
             <button type="button" onClick={() => setEdit(k)} className="min-w-0 flex-1 text-left">
-              <p className={`font-medium ${k.aktif ? 'text-slate-900' : 'text-slate-400'}`}>{k.nama}</p>
-              <p className="text-sm text-slate-500">{labelModal(k)}</p>
+              <p className={`font-medium ${k.aktif ? 'text-ink' : 'text-stone-400'}`}>{k.nama}</p>
+              <p className="text-sm text-stone-500">{labelModal(k)}</p>
             </button>
             <Saklar label={`${k.nama} aktif`} aktif={k.aktif} onChange={(v) => simpan({ ...k, aktif: v })} />
           </div>
@@ -238,7 +239,7 @@ export function KomponenModalPage() {
             <div>
               <Label>Jenis</Label>
               <Tabs items={JENIS_MODAL} value={edit.jenis} onChange={(j) => setEdit({ ...edit, jenis: j })} />
-              <p className="mt-1.5 text-sm text-slate-500">
+              <p className="mt-1.5 text-sm text-stone-500">
                 {edit.jenis === 'perPcs' ? 'Ditambahkan ke setiap pcs.' : edit.jenis === 'perKulakan' ? 'Satu kali per kulakan, dibagi rata ke jumlah pcs.' : 'Persen dari harga beli per pcs.'}
               </p>
             </div>
@@ -269,8 +270,8 @@ export function PembulatanPage() {
   return (
     <div className="md:max-w-2xl">
       <BilahAtas judul="Pembulatan harga" kembali="/pengaturan" />
-      <p className="mb-4 px-1 text-sm text-slate-500">Pilihan awal di kalkulator. Tetap bisa diganti setiap kali menghitung. Selalu dibulatkan ke atas.</p>
-      <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-brand-100 bg-white" role="radiogroup" aria-label="Pembulatan bawaan">
+      <p className="mb-4 px-1 text-sm text-stone-500">Pilihan awal di kalkulator. Tetap bisa diganti setiap kali menghitung. Selalu dibulatkan ke atas.</p>
+      <div className="divide-y divide-stone-100 overflow-hidden rounded-2xl border border-brand-100 bg-white" role="radiogroup" aria-label="Pembulatan bawaan">
         {PEMBULATAN.map((b) => (
           <button
             key={b.key}
@@ -278,13 +279,13 @@ export function PembulatanPage() {
             role="radio"
             aria-checked={st.pembulatan === b.key}
             onClick={() => st.update('pembulatan', b.key as Pembulatan)}
-            className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50"
+            className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50"
           >
-            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${st.pembulatan === b.key ? 'border-brand-700' : 'border-slate-300'}`}>
+            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${st.pembulatan === b.key ? 'border-brand-700' : 'border-stone-300'}`}>
               {st.pembulatan === b.key && <span className="h-2.5 w-2.5 rounded-full bg-brand-700" />}
             </span>
-            <span className="flex-1 font-medium text-slate-900">{b.key === 'tanpa' ? 'Tanpa pembulatan' : b.key === 'cantik' ? 'Harga cantik (…900)' : `Ke atas kelipatan ${b.label}`}</span>
-            <span className="text-sm text-slate-500 tabular-nums">43.750 → {b.contoh}</span>
+            <span className="flex-1 font-medium text-ink">{b.key === 'tanpa' ? 'Tanpa pembulatan' : b.key === 'cantik' ? 'Harga cantik (…900)' : `Ke atas kelipatan ${b.label}`}</span>
+            <span className="text-sm text-stone-500 tabular-nums">43.750 → {b.contoh}</span>
           </button>
         ))}
       </div>
@@ -300,7 +301,7 @@ export function KategoriBiayaPage() {
       <BilahAtas judul="Kategori biaya" kembali="/pengaturan" />
       <Daftar>
         {st.kategoriBiaya.map((k) => (
-          <div key={k} className="flex min-h-14 items-center px-4 py-3 font-medium text-slate-900">
+          <div key={k} className="flex min-h-14 items-center px-4 py-3 font-medium text-ink">
             {k}
           </div>
         ))}
@@ -328,12 +329,13 @@ export function Masuk() {
   const [salah, setSalah] = useState(false)
   const [sandi, setSandi] = useState('')
   return (
-    <div className="flex min-h-full items-center justify-center bg-brand-50 px-6 py-10">
+    <div className="flex min-h-full items-center justify-center bg-krem px-6 py-10">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-700 text-xl font-bold text-white">TH</div>
-          <h1 className="text-2xl font-bold text-slate-900">Toko Hijab</h1>
-          <p className="mt-1 text-sm text-slate-500">Masuk untuk melanjutkan</p>
+        <div className="mb-6 text-center">
+          <h1>
+            <img src={logoLengkap} alt="Pastel Hijab" className="mx-auto w-36" />
+          </h1>
+          <p className="mt-3 text-sm text-stone-500">Masuk untuk melanjutkan</p>
         </div>
         <form
           className="flex flex-col gap-4 rounded-2xl border border-brand-100 bg-white p-5 shadow-sm"
@@ -362,7 +364,7 @@ export function Masuk() {
             Lupa kata sandi?
           </Link>
         </form>
-        <p className="mt-6 text-center text-xs text-slate-500">Tetap masuk di perangkat ini sampai Ibu memilih Keluar.</p>
+        <p className="mt-6 text-center text-xs text-stone-500">Tetap masuk di perangkat ini sampai Ibu memilih Keluar.</p>
       </div>
     </div>
   )

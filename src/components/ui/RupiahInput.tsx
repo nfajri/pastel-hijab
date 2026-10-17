@@ -24,7 +24,7 @@ export default function RupiahInput({ value, onValueChange, label, hint, error, 
   return (
     <Field id={fid} label={label} hint={hint} error={error}>
       <div className="relative">
-        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-500">Rp</span>
+        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-stone-500">Rp</span>
         <input
           id={fid}
           inputMode="numeric"

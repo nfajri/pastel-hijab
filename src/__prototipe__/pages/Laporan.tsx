@@ -13,11 +13,11 @@ const PERIODE: { key: Periode; label: string }[] = [
   { key: 'rentang', label: 'Pilih tanggal' },
 ]
 
-const pilihCls = 'min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-base text-slate-900 focus:border-brand-600 focus:ring-2 focus:ring-brand-500/30 focus:outline-none'
+const pilihCls = 'min-h-11 w-full rounded-xl border border-stone-300 bg-white px-3 text-base text-ink focus:border-brand-600 focus:ring-2 focus:ring-brand-500/30 focus:outline-none'
 
 function Batang({ nilai, maks }: { nilai: number; maks: number }) {
   return (
-    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-stone-100">
       <div className="h-full rounded-full bg-brand-500" style={{ width: `${maks > 0 ? Math.max(2, (nilai / maks) * 100) : 0}%` }} />
     </div>
   )
@@ -106,7 +106,7 @@ export default function Laporan() {
                   key={p.key}
                   type="button"
                   onClick={() => setPeriode(p.key)}
-                  className={`min-h-9 shrink-0 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap ${periode === p.key ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600'}`}
+                  className={`min-h-9 shrink-0 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap ${periode === p.key ? 'border-ink bg-ink text-white' : 'border-stone-200 bg-white text-stone-600'}`}
                 >
                   {p.label}
                 </button>
@@ -138,12 +138,12 @@ export default function Laporan() {
             </div>
 
             <section className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm md:p-5">
-              <p className="text-sm font-medium text-slate-500">{filterAktif ? 'Laba kotor' : 'Laba bersih'}</p>
-              <p className={`mt-1 text-3xl font-bold tracking-tight tabular-nums ${(filterAktif ? r.labaKotor : r.labaBersih) < 0 ? 'text-red-700' : 'text-slate-900'}`}>{rp(filterAktif ? r.labaKotor : r.labaBersih)}</p>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="text-sm font-medium text-stone-500">{filterAktif ? 'Laba kotor' : 'Laba bersih'}</p>
+              <p className={`mt-1 text-3xl font-bold tracking-tight tabular-nums ${(filterAktif ? r.labaKotor : r.labaBersih) < 0 ? 'text-red-700' : 'text-ink'}`}>{rp(filterAktif ? r.labaKotor : r.labaBersih)}</p>
+              <p className="mt-1 text-sm text-stone-500">
                 {r.pesanan} pesanan · {r.pcs} pcs
               </p>
-              <div className="mt-4 border-t border-slate-100 pt-2">
+              <div className="mt-4 border-t border-stone-100 pt-2">
                 <Rinci label="Omzet (total harga jual)" nilai={rp(r.omzet)} />
                 <Rinci label="Potongan saluran" nilai={`−${rp(r.potongan)}`} nada="kurang" />
                 <Rinci label="Modal barang terjual" nilai={`−${rp(r.hpp)}`} nada="kurang" />
@@ -155,7 +155,7 @@ export default function Laporan() {
                   </>
                 )}
               </div>
-              {filterAktif && <p className="mt-2 text-xs text-slate-500">Biaya operasional tidak dibagi per saluran/model, jadi laba bersih hanya tampil tanpa filter.</p>}
+              {filterAktif && <p className="mt-2 text-xs text-stone-500">Biaya operasional tidak dibagi per saluran/model, jadi laba bersih hanya tampil tanpa filter.</p>}
             </section>
           </div>
 
@@ -170,15 +170,15 @@ export default function Laporan() {
               onChange={(t) => setSp(t === 'saluran' ? {} : { tab: t }, { replace: true })}
             />
             {tab === 'saluran' && (
-              <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
+              <div className="divide-y divide-stone-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
                 {perSaluran.map((x) => (
                   <div key={x.id} className="px-4 py-3">
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="font-medium text-slate-900">{x.nama}</span>
-                      <span className="font-semibold text-slate-900 tabular-nums">{rp(x.omzet)}</span>
+                      <span className="font-medium text-ink">{x.nama}</span>
+                      <span className="font-semibold text-ink tabular-nums">{rp(x.omzet)}</span>
                     </div>
                     <Batang nilai={x.omzet} maks={maksSal} />
-                    <div className="mt-1.5 flex justify-between text-xs text-slate-500 tabular-nums">
+                    <div className="mt-1.5 flex justify-between text-xs text-stone-500 tabular-nums">
                       <span>
                         {x.pcs} pcs · potongan {rp(x.potongan)}
                       </span>
@@ -190,17 +190,17 @@ export default function Laporan() {
             )}
             {tab === 'model' &&
               (perModel.length === 0 ? (
-                <p className="rounded-2xl border border-brand-100 bg-white px-4 py-6 text-center text-sm text-slate-500">Tidak ada penjualan di periode ini.</p>
+                <p className="rounded-2xl border border-brand-100 bg-white px-4 py-6 text-center text-sm text-stone-500">Tidak ada penjualan di periode ini.</p>
               ) : (
-                <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
+                <div className="divide-y divide-stone-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
                   {perModel.map((x) => (
                     <div key={x.p.id} className="px-4 py-3">
                       <div className="flex items-baseline justify-between gap-3">
-                        <span className="min-w-0 truncate font-medium text-slate-900">{x.p.nama}</span>
-                        <span className="shrink-0 font-semibold text-slate-900 tabular-nums">{rp(x.omz)}</span>
+                        <span className="min-w-0 truncate font-medium text-ink">{x.p.nama}</span>
+                        <span className="shrink-0 font-semibold text-ink tabular-nums">{rp(x.omz)}</span>
                       </div>
                       <Batang nilai={x.omz} maks={maksMod} />
-                      <div className="mt-1.5 flex justify-between text-xs text-slate-500 tabular-nums">
+                      <div className="mt-1.5 flex justify-between text-xs text-stone-500 tabular-nums">
                         <span>{x.qty} pcs</span>
                         <span className="font-semibold text-emerald-700">Laba {rp(x.laba)}</span>
                       </div>
@@ -212,23 +212,23 @@ export default function Laporan() {
               <>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-2xl border border-brand-100 bg-white p-4">
-                    <p className="text-xs text-slate-500">Nilai stok (stok × modal)</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900 tabular-nums">{rp(nilaiStok)}</p>
+                    <p className="text-xs text-stone-500">Nilai stok (stok × modal)</p>
+                    <p className="mt-1 text-lg font-bold text-ink tabular-nums">{rp(nilaiStok)}</p>
                   </div>
                   <div className="rounded-2xl border border-brand-100 bg-white p-4">
-                    <p className="text-xs text-slate-500">Stok menipis / habis</p>
+                    <p className="text-xs text-stone-500">Stok menipis / habis</p>
                     <p className="mt-1 text-lg font-bold text-amber-700 tabular-nums">{menipis.length} model</p>
                   </div>
                 </div>
-                <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
+                <div className="divide-y divide-stone-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
                   {[...st.produk]
                     .sort((a, b) => (a.stok <= a.batas ? 0 : 1) - (b.stok <= b.batas ? 0 : 1) || a.stok - b.stok)
                     .map((p) => (
-                      <Link key={p.id} to={`/produk/${p.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50">
+                      <Link key={p.id} to={`/produk/${p.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50">
                         <Thumb nama={p.nama} kecil />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium text-slate-900">{p.nama}</p>
-                          <p className="text-xs text-slate-500 tabular-nums">Nilai {rp(p.stok * p.modal)}</p>
+                          <p className="truncate font-medium text-ink">{p.nama}</p>
+                          <p className="text-xs text-stone-500 tabular-nums">Nilai {rp(p.stok * p.modal)}</p>
                         </div>
                         <StokLencana stok={p.stok} batas={p.batas} />
                       </Link>
@@ -241,20 +241,20 @@ export default function Laporan() {
       )}
 
       <Sheet open={ekspor} onClose={() => setEkspor(false)} title="Ekspor ke Excel">
-        <p className="mb-3 text-sm text-slate-600">File .xlsx bisa dibuka di Excel dan disimpan sebagai cadangan.</p>
-        <div className="-mx-4 divide-y divide-slate-100 border-y border-slate-100">
+        <p className="mb-3 text-sm text-stone-600">File .xlsx bisa dibuka di Excel dan disimpan sebagai cadangan.</p>
+        <div className="-mx-4 divide-y divide-stone-100 border-y border-stone-100">
           {[
             ['Laporan periode ini', `${PERIODE.find((p) => p.key === periode)!.label}${filterAktif ? ', sesuai filter' : ''}`],
             ['Semua transaksi', 'Penjualan per baris + biaya'],
             ['Daftar produk', 'Stok, modal, harga per saluran'],
           ].map(([a, b]) => (
-            <button key={a} type="button" onClick={() => setEkspor(false)} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50">
+            <button key={a} type="button" onClick={() => setEkspor(false)} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-xs font-bold text-emerald-700">XLS</div>
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-slate-900">{a}</p>
-                <p className="text-sm text-slate-500">{b}</p>
+                <p className="font-medium text-ink">{a}</p>
+                <p className="text-sm text-stone-500">{b}</p>
               </div>
-              <Ikon d={IK.ekspor} className="h-5 w-5 text-slate-400" />
+              <Ikon d={IK.ekspor} className="h-5 w-5 text-stone-400" />
             </button>
           ))}
         </div>

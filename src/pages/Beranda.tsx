@@ -6,7 +6,7 @@ export default function Beranda() {
     <>
       <PageHeader title="Beranda" subtitle="Ringkasan hari ini dan pintasan catat penjualan." />
       <Card>
-        <p className="text-sm text-slate-500">Placeholder — isi halaman Beranda dibuat setelah desain disetujui.</p>
+        <p className="text-sm text-stone-500">Placeholder — isi halaman Beranda dibuat setelah desain disetujui.</p>
       </Card>
     </>
   )

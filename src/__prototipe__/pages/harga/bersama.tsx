@@ -32,13 +32,13 @@ export function PilihProduk({ k }: { k: Kalk }) {
   const list = k.st.produk.filter((x) => x.nama.toLowerCase().includes(q.toLowerCase()))
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="flex w-full items-center gap-3 rounded-2xl border border-brand-100 bg-white p-3 text-left shadow-sm hover:border-slate-300">
-        {p ? <Thumb nama={p.nama} /> : <div className="h-12 w-12 rounded-xl bg-slate-100" />}
+      <button type="button" onClick={() => setOpen(true)} className="flex w-full items-center gap-3 rounded-2xl border border-brand-100 bg-white p-3 text-left shadow-sm hover:border-stone-300">
+        {p ? <Thumb nama={p.nama} /> : <div className="h-12 w-12 rounded-xl bg-stone-100" />}
         <div className="min-w-0 flex-1">
-          <p className="line-clamp-2 font-semibold text-slate-900">{p?.nama ?? 'Pilih produk'}</p>
+          <p className="line-clamp-2 font-semibold text-ink">{p?.nama ?? 'Pilih produk'}</p>
           {p && (
-            <p className="text-sm text-slate-500 tabular-nums">
-              Modal <span className="font-semibold text-slate-700">{rp(p.modal)}</span>/pcs · stok {p.stok}
+            <p className="text-sm text-stone-500 tabular-nums">
+              Modal <span className="font-semibold text-stone-700">{rp(p.modal)}</span>/pcs · stok {p.stok}
             </p>
           )}
         </div>
@@ -46,15 +46,15 @@ export function PilihProduk({ k }: { k: Kalk }) {
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title="Pilih produk">
         <div className="relative mb-3">
-          <Ikon d={IK.cari} className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <Ikon d={IK.cari} className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-stone-400" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Cari nama produk"
-            className="min-h-11 w-full rounded-xl border border-slate-300 bg-white pr-3 pl-10 text-base focus:border-brand-600 focus:ring-2 focus:ring-brand-500/30 focus:outline-none"
+            className="min-h-11 w-full rounded-xl border border-stone-300 bg-white pr-3 pl-10 text-base focus:border-brand-600 focus:ring-2 focus:ring-brand-500/30 focus:outline-none"
           />
         </div>
-        <div className="-mx-4 divide-y divide-slate-100">
+        <div className="-mx-4 divide-y divide-stone-100">
           {list.map((x: Produk) => (
             <button
               key={x.id}
@@ -63,12 +63,12 @@ export function PilihProduk({ k }: { k: Kalk }) {
                 k.setProdukId(x.id)
                 setOpen(false)
               }}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50"
+              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50"
             >
               <Thumb nama={x.nama} kecil />
               <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 font-medium text-slate-900">{x.nama}</p>
-                <p className="text-sm text-slate-500 tabular-nums">Modal {rp(x.modal)}</p>
+                <p className="line-clamp-2 font-medium text-ink">{x.nama}</p>
+                <p className="text-sm text-stone-500 tabular-nums">Modal {rp(x.modal)}</p>
               </div>
               {x.id === k.produkId ? <Ikon d={IK.cek} className="h-5 w-5 text-brand-700" /> : <StokLencana stok={x.stok} batas={x.batas} />}
             </button>
@@ -99,12 +99,12 @@ export function InputTarget({ k }: { k: Kalk }) {
               const v = e.target.value.replace(',', '.').replace(/[^\d.]/g, '')
               k.setNilai(v === '' ? null : Math.min(999, Number(v)))
             }}
-            className="min-h-11 w-full rounded-xl border border-slate-300 bg-white pr-10 pl-3 text-right text-base tabular-nums focus:border-brand-600 focus:ring-2 focus:ring-brand-500/30 focus:outline-none"
+            className="min-h-11 w-full rounded-xl border border-stone-300 bg-white pr-10 pl-3 text-right text-base tabular-nums focus:border-brand-600 focus:ring-2 focus:ring-brand-500/30 focus:outline-none"
           />
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">%</span>
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-stone-500">%</span>
         </div>
       )}
-      <p className="text-sm text-slate-500">{k.nilai != null ? `Untung ${teksTarget(k.cara, k.nilai).replace('untung ', '')}` : 'Isi target untung'}</p>
+      <p className="text-sm text-stone-500">{k.nilai != null ? `Untung ${teksTarget(k.cara, k.nilai).replace('untung ', '')}` : 'Isi target untung'}</p>
     </div>
   )
 }

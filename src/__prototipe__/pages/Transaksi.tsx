@@ -59,7 +59,7 @@ export default function Transaksi() {
                 key={s.id}
                 type="button"
                 onClick={() => setSaluran(s.id)}
-                className={`min-h-9 shrink-0 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap ${saluran === s.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600'}`}
+                className={`min-h-9 shrink-0 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap ${saluran === s.id ? 'border-ink bg-ink text-white' : 'border-stone-200 bg-white text-stone-600'}`}
               >
                 {s.nama}
               </button>
@@ -81,23 +81,23 @@ export default function Transaksi() {
               {kelompok(js).map(([tgl, xs]) => (
                 <section key={tgl}>
                   <div className="mb-2 flex items-baseline justify-between px-1">
-                    <h2 className="text-sm font-semibold text-slate-500">{tglPanjang(tgl)}</h2>
-                    <span className="text-sm text-slate-500 tabular-nums">{rp(xs.reduce((t, j) => t + omzet(j), 0))}</span>
+                    <h2 className="text-sm font-semibold text-stone-500">{tglPanjang(tgl)}</h2>
+                    <span className="text-sm text-stone-500 tabular-nums">{rp(xs.reduce((t, j) => t + omzet(j), 0))}</span>
                   </div>
-                  <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
+                  <div className="divide-y divide-stone-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
                     {xs.map((j) => (
                       <BarisLink
                         key={j.id}
                         to={`/transaksi/${j.id}`}
                         kanan={
                           <div className="text-right">
-                            <p className="font-semibold text-slate-900 tabular-nums">{rp(omzet(j))}</p>
+                            <p className="font-semibold text-ink tabular-nums">{rp(omzet(j))}</p>
                             <p className="text-xs text-emerald-700 tabular-nums">+{rp(untung(j))}</p>
                           </div>
                         }
                       >
-                        <p className="truncate font-medium text-slate-900">{j.baris.map((b) => (b.qty > 1 ? `${b.nama} ×${b.qty}` : b.nama)).join(', ')}</p>
-                        <p className="text-sm text-slate-500">
+                        <p className="truncate font-medium text-ink">{j.baris.map((b) => (b.qty > 1 ? `${b.nama} ×${b.qty}` : b.nama)).join(', ')}</p>
+                        <p className="text-sm text-stone-500">
                           {namaSaluran(st.saluran, j.saluranId)} · {j.jam}
                         </p>
                       </BarisLink>
@@ -124,17 +124,17 @@ export default function Transaksi() {
               }
             />
           ) : (
-            <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
+            <div className="divide-y divide-stone-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
               {st.biaya.map((b) => (
                 <div key={b.id} className="flex min-h-14 items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-slate-900">{b.kategori}</p>
-                    <p className="truncate text-sm text-slate-500">
+                    <p className="font-medium text-ink">{b.kategori}</p>
+                    <p className="truncate text-sm text-stone-500">
                       {tglPendek(b.tanggal)}
                       {b.catatan ? ` · ${b.catatan}` : ''}
                     </p>
                   </div>
-                  <p className="font-semibold text-slate-900 tabular-nums">{rp(b.jumlah)}</p>
+                  <p className="font-semibold text-ink tabular-nums">{rp(b.jumlah)}</p>
                 </div>
               ))}
             </div>
@@ -165,15 +165,15 @@ export function DetailPenjualan() {
   return (
     <div className="md:max-w-2xl">
       <BilahAtas judul={`Penjualan ${j.id}`} kembali="/transaksi" />
-      <p className="mb-4 text-sm text-slate-500">
+      <p className="mb-4 text-sm text-stone-500">
         {namaSaluran(st.saluran, j.saluranId)} · {tglPanjang(j.tanggal)}, {j.jam}
       </p>
       <div className="flex flex-col gap-4">
-        <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
+        <div className="divide-y divide-stone-100 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
           {j.baris.map((b) => (
             <div key={b.produkId} className="px-4 py-3">
-              <p className="font-medium text-slate-900">{b.nama}</p>
-              <div className="mt-1 flex justify-between text-sm text-slate-500 tabular-nums">
+              <p className="font-medium text-ink">{b.nama}</p>
+              <div className="mt-1 flex justify-between text-sm text-stone-500 tabular-nums">
                 <span>
                   {b.qty} × {rp(b.harga)}
                 </span>
@@ -199,7 +199,7 @@ export function DetailPenjualan() {
         </div>
       </div>
       <Sheet open={hapus} onClose={() => setHapus(false)} title="Hapus penjualan ini?">
-        <p className="mb-4 text-sm text-slate-600">Stok akan dikembalikan: {j.baris.map((b) => `${b.nama} +${b.qty}`).join(', ')}.</p>
+        <p className="mb-4 text-sm text-stone-600">Stok akan dikembalikan: {j.baris.map((b) => `${b.nama} +${b.qty}`).join(', ')}.</p>
         <div className="flex flex-col gap-2">
           <Button
             variant="danger"

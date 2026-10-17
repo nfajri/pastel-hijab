@@ -40,7 +40,7 @@ export default function Komponen() {
         <Card title="Sheet / modal">
           <Button onClick={() => setOpen(true)}>Buka sheet</Button>
           <Sheet open={open} onClose={() => setOpen(false)} title="Contoh sheet">
-            <p className="mb-4 text-sm text-slate-600">Bottom sheet di HP, modal di laptop. Tutup dengan × , klik latar, atau Esc.</p>
+            <p className="mb-4 text-sm text-stone-600">Bottom sheet di HP, modal di laptop. Tutup dengan × , klik latar, atau Esc.</p>
             <Button block onClick={() => setOpen(false)}>Selesai</Button>
           </Sheet>
         </Card>

@@ -11,16 +11,16 @@ function SheetPilihBarang({ k, open, onClose }: { k: Keranjang; open: boolean; o
   return (
     <Sheet open={open} onClose={onClose} title="Pilih barang">
       <div className="relative mb-3">
-        <Ikon d={IK.cari} className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-slate-400" />
+        <Ikon d={IK.cari} className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-stone-400" />
         <input
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Cari nama produk"
-          className="min-h-11 w-full rounded-xl border border-slate-300 bg-white pr-3 pl-10 text-base focus:border-brand-600 focus:ring-2 focus:ring-brand-500/30 focus:outline-none"
+          className="min-h-11 w-full rounded-xl border border-stone-300 bg-white pr-3 pl-10 text-base focus:border-brand-600 focus:ring-2 focus:ring-brand-500/30 focus:outline-none"
         />
       </div>
-      <div className="-mx-4 divide-y divide-slate-100">
+      <div className="-mx-4 divide-y divide-stone-100">
         {list.map((p) => {
           const dipilih = k.qtyDari(p.id) > 0
           const habis = p.stok === 0
@@ -34,18 +34,18 @@ function SheetPilihBarang({ k, open, onClose }: { k: Keranjang; open: boolean; o
                 if (!dipilih) k.setQty(p.id, 1)
                 onClose()
               }}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 disabled:opacity-50"
+              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50 disabled:opacity-50"
             >
               <Thumb nama={p.nama} kecil />
               <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 font-medium text-slate-900">{p.nama}</p>
-                <p className="text-sm text-slate-500 tabular-nums">{harga ? rp(harga) : 'Harga belum diatur'}</p>
+                <p className="line-clamp-2 font-medium text-ink">{p.nama}</p>
+                <p className="text-sm text-stone-500 tabular-nums">{harga ? rp(harga) : 'Harga belum diatur'}</p>
               </div>
               {dipilih ? <Ikon d={IK.cek} className="h-5 w-5 text-brand-700" /> : <StokLencana stok={p.stok} batas={p.batas} />}
             </button>
           )
         })}
-        {list.length === 0 && <p className="px-4 py-6 text-center text-sm text-slate-500">Tidak ada produk bernama “{q}”.</p>}
+        {list.length === 0 && <p className="px-4 py-6 text-center text-sm text-stone-500">Tidak ada produk bernama “{q}”.</p>}
       </div>
     </Sheet>
   )
@@ -79,10 +79,10 @@ export default function JualA() {
                   <div className="flex items-start gap-3">
                     <Thumb nama={p.nama} kecil />
                     <div className="min-w-0 flex-1">
-                      <p className="line-clamp-2 font-medium text-slate-900">{p.nama}</p>
-                      <p className="text-sm text-slate-500">Stok {p.stok}</p>
+                      <p className="line-clamp-2 font-medium text-ink">{p.nama}</p>
+                      <p className="text-sm text-stone-500">Stok {p.stok}</p>
                     </div>
-                    <button type="button" aria-label={`Hapus ${p.nama}`} onClick={() => k.setQty(p.id, 0)} className="-mt-1 -mr-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100">
+                    <button type="button" aria-label={`Hapus ${p.nama}`} onClick={() => k.setQty(p.id, 0)} className="-mt-1 -mr-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100">
                       <Ikon d={IK.hapus} />
                     </button>
                   </div>

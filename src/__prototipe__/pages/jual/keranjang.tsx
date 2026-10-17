@@ -124,24 +124,24 @@ export function RingkasanUang({ k, rinciTerbuka = false }: { k: Keranjang; rinci
       {!tanpaPotongan && (
         <>
           <div className="flex items-center justify-between gap-3 py-1.5">
-            <button type="button" onClick={() => setBuka(!buka)} className="flex min-w-0 items-center gap-1 text-left text-sm text-slate-600" aria-expanded={buka}>
+            <button type="button" onClick={() => setBuka(!buka)} className="flex min-w-0 items-center gap-1 text-left text-sm text-stone-600" aria-expanded={buka}>
               Potongan {k.saluran.nama}
               {k.potonganManual != null && <span className="text-xs text-brand-700">(diubah)</span>}
-              <Ikon d={IK.kanan} className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${buka ? 'rotate-90' : ''}`} />
+              <Ikon d={IK.kanan} className={`h-4 w-4 shrink-0 text-stone-400 transition-transform ${buka ? 'rotate-90' : ''}`} />
             </button>
-            <span className="text-sm text-slate-600 tabular-nums">−{rp(k.potongan)}</span>
+            <span className="text-sm text-stone-600 tabular-nums">−{rp(k.potongan)}</span>
           </div>
           {buka && (
-            <div className="mb-1 rounded-xl bg-slate-50 px-3 py-2">
+            <div className="mb-1 rounded-xl bg-stone-50 px-3 py-2">
               {k.potonganManual == null ? (
                 rincianPot.map((x) => (
-                  <div key={x.nama} className="flex justify-between py-0.5 text-xs text-slate-500">
+                  <div key={x.nama} className="flex justify-between py-0.5 text-xs text-stone-500">
                     <span>{x.nama}</span>
                     <span className="tabular-nums">−{rp(x.nilai)}</span>
                   </div>
                 ))
               ) : (
-                <p className="py-0.5 text-xs text-slate-500">Otomatis: −{rp(k.potonganAuto)}</p>
+                <p className="py-0.5 text-xs text-stone-500">Otomatis: −{rp(k.potonganAuto)}</p>
               )}
               {ubah ? (
                 <div className="mt-2 flex items-end gap-2">
@@ -158,7 +158,7 @@ export function RingkasanUang({ k, rinciTerbuka = false }: { k: Keranjang; rinci
                     Ubah potongan
                   </button>
                   {k.potonganManual != null && (
-                    <button type="button" className="min-h-9 text-sm font-semibold text-slate-500" onClick={() => k.setPotonganManual(null)}>
+                    <button type="button" className="min-h-9 text-sm font-semibold text-stone-500" onClick={() => k.setPotonganManual(null)}>
                       Kembalikan otomatis
                     </button>
                   )}
@@ -188,7 +188,7 @@ export function PilihSaluran({ k, kompak }: { k: Keranjang; kompak?: boolean }) 
             aria-checked={on}
             onClick={() => k.setSaluranId(s.id)}
             className={`min-h-11 shrink-0 rounded-xl border px-4 text-sm font-semibold whitespace-nowrap transition-colors ${
-              on ? 'border-brand-700 bg-brand-700 text-white' : 'border-slate-200 bg-white text-slate-700'
+              on ? 'border-brand-700 bg-brand-700 text-white' : 'border-stone-200 bg-white text-stone-700'
             } ${kompak ? '' : 'min-h-12 text-base'}`}
           >
             {s.nama}
@@ -202,8 +202,8 @@ export function PilihSaluran({ k, kompak }: { k: Keranjang; kompak?: boolean }) 
 export function PilihTanggal({ k }: { k: Keranjang }) {
   const hariIni = k.tanggal === k.st.hariIni
   return (
-    <label className="relative flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700">
-      <Ikon d={IK.kalender} className="h-5 w-5 text-slate-500" />
+    <label className="relative flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-white px-3 text-sm text-stone-700">
+      <Ikon d={IK.kalender} className="h-5 w-5 text-stone-500" />
       <span className="flex-1 font-medium">{hariIni ? 'Hari ini' : new Date(k.tanggal + 'T00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
       <span className="text-sm font-semibold text-brand-700">Ubah</span>
       <input type="date" aria-label="Tanggal penjualan" value={k.tanggal} max={k.st.hariIni} onChange={(e) => e.target.value && k.setTanggal(e.target.value)} className="absolute inset-0 opacity-0" />
