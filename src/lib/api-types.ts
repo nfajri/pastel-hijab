@@ -42,9 +42,15 @@ export interface Saluran {
   potongan: Potongan[]
 }
 
+export type CaraTarget = 'persen_jual' | 'persen_modal' | 'rupiah'
+
 export interface HargaSaluran {
   saluran_id: number
   harga: number
+  target_cara: CaraTarget | null
+  target_nilai: number | null
+  untung: number
+  di_bawah_target: boolean
   updated_at: string
 }
 
@@ -56,6 +62,8 @@ export interface Produk {
   modal: number
   batas_stok_menipis: number
   menipis: boolean
+  di_bawah_target: boolean
+  terjual_30_hari: number
   aktif: boolean
   created_at: string
   updated_at: string

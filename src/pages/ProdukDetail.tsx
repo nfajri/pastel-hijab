@@ -269,18 +269,19 @@ export default function DetailProduk() {
                             <span className="text-sm font-semibold text-brand-700">Atur harga</span>
                           </button>
                         )
-                      const r = perkiraanUntung(p.modal, s, hs.harga)
+                      // untung & status target dari server (dihitung ulang setiap dibaca)
+                      const persen = hs.harga > 0 ? (hs.untung / hs.harga) * 100 : 0
                       return (
                         <button key={s.id} type="button" onClick={() => setHarga(s.id)} className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50">
                           <div className="min-w-0 flex-1">
                             <p className="font-medium text-ink">{s.nama}</p>
                             <p className="text-sm text-stone-500 tabular-nums">
-                              Untung {rp(r.untung)} · {fmtPersen(r.persenJual)}
+                              Untung {rp(hs.untung)} · {fmtPersen(persen)}
                             </p>
                           </div>
                           <div className="text-right">
                             <p className="font-semibold text-ink tabular-nums">{rp(hs.harga)}</p>
-                            {r.untung < 0 && <Lencana nada="bahaya">Rugi</Lencana>}
+                            {hs.untung < 0 ? <Lencana nada="bahaya">Rugi</Lencana> : hs.di_bawah_target ? <Lencana nada="peringatan">Di bawah target</Lencana> : null}
                           </div>
                         </button>
                       )

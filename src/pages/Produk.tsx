@@ -4,7 +4,6 @@ import DataState from '../components/DataState'
 import { Daftar, IK, Ikon, KepalaHalaman, Kosong, StokLencana, Thumb } from '../components/ui'
 import type { Produk as TProduk, Saluran } from '../lib/api-types'
 import { rp, rpModal } from '../lib/format'
-import { perkiraanUntung } from '../lib/untung'
 import { useApi } from '../lib/useApi'
 
 type Saring = 'semua' | 'menipis' | 'nonaktif' | string
@@ -164,7 +163,7 @@ export default function Produk() {
                           <td className="px-3 py-3 text-right text-stone-700 tabular-nums">{rpModal(p.modal)}</td>
                           {salAktif.map((s) => {
                             const hs = p.harga.find((h) => h.saluran_id === s.id)
-                            const rugi = hs && perkiraanUntung(p.modal, s, hs.harga).untung < 0
+                            const rugi = hs && hs.untung < 0
                             return (
                               <td key={s.id} className={`px-3 py-3 text-right tabular-nums ${rugi ? 'font-semibold text-red-700' : 'text-stone-700'}`}>
                                 {hs ? rp(hs.harga) : <span className="text-stone-400">—</span>}
