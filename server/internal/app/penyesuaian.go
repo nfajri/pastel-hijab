@@ -66,7 +66,7 @@ func (s *Server) createPenyesuaian(w http.ResponseWriter, r *http.Request) error
 	if err := readJSON(w, r, &in); err != nil {
 		return err
 	}
-	tgl, err := tanggal(in.Tanggal, s.cfg.Now())
+	tgl, err := tanggalTransaksi(in.Tanggal, s.cfg.Now())
 	if err != nil {
 		return err
 	}

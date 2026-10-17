@@ -257,12 +257,9 @@ type pengeluaranIn struct {
 // simpanPengeluaran: id 0 = baru. kategoriLama boleh dipakai walau sudah nonaktif (edit data lama).
 func (s *Server) simpanPengeluaran(id int64, in pengeluaranIn, kategoriLama int64) (int64, error) {
 	now := s.cfg.Now()
-	tgl, err := tanggal(in.Tanggal, now)
+	tgl, err := tanggalTransaksi(in.Tanggal, now)
 	if err != nil {
 		return 0, err
-	}
-	if tgl > hariIni(now) {
-		return 0, bad("Tanggal pengeluaran tidak boleh setelah hari ini")
 	}
 	if in.Jumlah <= 0 {
 		return 0, bad("Isi jumlah pengeluaran")

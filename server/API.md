@@ -32,7 +32,7 @@ Perubahan yang bisa merusak frontend akan dicatat di bagian "Riwayat" paling baw
 | Rupiah (harga, harga beli, maks potongan) | integer | `20000` |
 | Modal per pcs (`modal`, `modal_pcs`, `per_pcs`) | number, 2 desimal | `21333.33` |
 | Persen | number, ditulis apa adanya | `2` = 2%, `2.5` = 2,5% |
-| Tanggal transaksi | `"YYYY-MM-DD"`; kosong/tidak dikirim = hari ini (WIB) | `"2026-10-17"` |
+| Tanggal transaksi | `"YYYY-MM-DD"`; kosong/tidak dikirim = hari ini (WIB); tidak boleh setelah hari ini (WIB) → `400 "Tanggal tidak boleh lewat dari hari ini"`, tanggal lampau boleh | `"2026-10-17"` |
 | Waktu sistem (`created_at`, `updated_at`) | ISO UTC | `"2026-10-17T10:00:00.000Z"` |
 | `id` | integer | |
 
@@ -180,7 +180,8 @@ type BarangMasukInput = {
 
 Ubah/hapus ditolak `409` bila stok sekarang < qty kulakan itu (sebagian sudah terjual/dikeluarkan). Pesannya sudah siap tampil.
 Pengecualian: `PUT` yang `produk_id`, `qty`, `harga_beli`, dan `komponen`-nya sama (atau `komponen` tidak dikirim) hanya
-mengubah `tanggal`/`supplier`/`catatan` → selalu bisa, stok & modal tidak disentuh.
+mengubah `tanggal`/`supplier`/`catatan` → selalu bisa (tanggal tetap tidak boleh setelah hari ini), stok & modal tidak disentuh.
+`tanggal` setelah hari ini (WIB) → `400` untuk `POST` maupun `PUT`.
 
 Contoh:
 ```json
@@ -204,7 +205,7 @@ type Penyesuaian = {
 }
 ```
 - `GET /api/penyesuaian-stok[?produk_id=]` → `Penyesuaian[]` (terbaru dulu, maks 500)
-- `POST /api/penyesuaian-stok` `{produk_id, alasan, selisih}` **atau** `{produk_id, alasan, stok_fisik}` (hasil hitung fisik), `tanggal?` → `201 Penyesuaian`
+- `POST /api/penyesuaian-stok` `{produk_id, alasan, selisih}` **atau** `{produk_id, alasan, stok_fisik}` (hasil hitung fisik), `tanggal?` (tidak boleh setelah hari ini) → `201 Penyesuaian`
   — tidak mengubah modal; stok tidak boleh minus (`409`).
 - `DELETE /api/penyesuaian-stok/{id}` → `204` (membatalkan, stok dikembalikan; `409` bila stok jadi minus)
 
@@ -410,3 +411,6 @@ Angka disimpan sebagai angka (bisa dijumlah di Excel), rupiah berformat `#,##0`.
 - 17 Okt 2026 — T-0138: `PUT /api/penjualan/{id}` mempertahankan potongan tersimpan bila saluran/baris tidak berubah dan
   `potongan` tidak dikirim (sebelumnya selalu dihitung ulang). Validasi baru: `potongan` > subtotal → 400, `PUT .../harga`
   dengan `harga: 0` → 400, `cek` kalkulator untuk saluran tak ada/tak dihitung → 404/400. Status target bertoleransi Rp1.
+- 17 Okt 2026 — T-0146: tanggal setelah hari ini (WIB) kini juga ditolak untuk barang masuk (`POST`/`PUT`) dan penyesuaian stok;
+  pesan 400 untuk semua transaksi (barang masuk, penyesuaian, penjualan, pengeluaran) diseragamkan jadi
+  "Tanggal tidak boleh lewat dari hari ini". Filter `dari`/`sampai` tidak dibatasi.

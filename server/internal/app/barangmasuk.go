@@ -296,7 +296,7 @@ func (s *Server) terapkanMasuk(tx *sql.Tx, id int64, in barangMasukIn) (int64, e
 // rapikanKeterangan memvalidasi tanggal/supplier/catatan (bagian yang tidak memengaruhi stok & modal).
 func (s *Server) rapikanKeterangan(in *barangMasukIn) error {
 	var err error
-	if in.Tanggal, err = tanggal(in.Tanggal, s.cfg.Now()); err != nil {
+	if in.Tanggal, err = tanggalTransaksi(in.Tanggal, s.cfg.Now()); err != nil {
 		return err
 	}
 	if in.Supplier, err = teks("supplier", in.Supplier, false, 100); err != nil {

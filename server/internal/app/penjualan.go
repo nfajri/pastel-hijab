@@ -316,12 +316,9 @@ func sama(lama *penjualan, saluranID int64, bs []barisJual) bool {
 // produk yang sudah ada di versi lama memakai HPP lama, supaya edit tidak mengubah untung karena modal berubah (§7 butir 11).
 func (s *Server) terapkanJual(tx *sql.Tx, id int64, in penjualanIn, lama *penjualan) (int64, error) {
 	now := s.cfg.Now()
-	tgl, err := tanggal(in.Tanggal, now)
+	tgl, err := tanggalTransaksi(in.Tanggal, now)
 	if err != nil {
 		return 0, err
-	}
-	if tgl > hariIni(now) {
-		return 0, bad("Tanggal penjualan tidak boleh setelah hari ini")
 	}
 	catatan, err := teks("catatan", in.Catatan, false, 500)
 	if err != nil {
