@@ -1,47 +1,48 @@
 # Server Pastel Hijab (Go + SQLite)
 
-Satu binary: API JSON di `/api/*` + menyajikan build frontend (`dist/`). Database SQLite satu file
-(driver `modernc.org/sqlite`, tanpa CGO). Spesifikasi: `office/docs/toko-hijab/spesifikasi-pembukuan-stok-hijab.md`.
+Satu binary `pastel`: API JSON di `/api/*` + frontend (build `dist/` di-embed ke binary). Database SQLite satu file
+(driver `modernc.org/sqlite`, tanpa CGO, mode WAL). Deploy & backup di VPS: `deploy/` (T-0132). Spesifikasi: `office/docs/toko-hijab/spesifikasi-pembukuan-stok-hijab.md`.
 
 ## Build & uji
 
 Butuh Go ≥ 1.26.
 
 ```bash
-cd server
-go test ./...
-CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o toko-hijab .
-# untuk VPS amd64 dari mesin lain:
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o toko-hijab .
+(cd server && go test ./...)
+npm ci
+server/build.sh            # npm run build → salin dist/ ke server/internal/web/dist → out/pastel (linux/amd64)
+server/build.sh arm64      # VPS aarch64
+SKIP_FRONTEND=1 server/build.sh   # pakai dist/ yang sudah ada
 ```
+
+`go build` langsung di `server/` tetap jalan, tapi tanpa frontend (hanya API; ada peringatan di log) kecuali
+`server/internal/web/dist/` sudah diisi build.sh.
 
 ## Perintah
 
 ```bash
-toko-hijab [serve]                         # jalankan server
-toko-hijab user create <username>          # buat akun; password diketik 2× (tanpa gema) atau 1 baris dari stdin
-toko-hijab user set-password <username>    # reset lupa password; semua sesi dicabut
-toko-hijab backup /path/backup-YYYYMMDD.db # salinan konsisten (VACUUM INTO), aman saat server jalan; tidak menimpa file
-toko-hijab migrate                         # terapkan migrasi lalu keluar (serve juga otomatis migrasi)
+pastel [serve]                         # jalankan server (SIGTERM → berhenti rapi)
+pastel create-user <username>          # buat akun; password diketik 2× (tanpa gema) atau 1 baris dari stdin
+pastel set-password <username>         # reset lupa password; semua sesi dicabut
+pastel backup /path/backup-YYYYMMDD.db # salinan konsisten (VACUUM INTO), aman saat server jalan; tidak menimpa file
+pastel migrate                         # terapkan migrasi lalu keluar (serve juga otomatis migrasi saat start)
 ```
 
-Tidak ada akun/password bawaan. Setelah deploy pertama: `toko-hijab user create ibu`.
+Tidak ada akun/password bawaan. Setelah deploy pertama: `pastel create-user ibu` (dengan env yang sama dengan service).
 
 ## Konfigurasi (env)
 
 | Env | Bawaan | Keterangan |
 |---|---|---|
-| `ADDR` | `127.0.0.1:8080` | alamat dengar; di VPS biarkan localhost, Caddy yang membuka HTTPS |
-| `DB_PATH` | `data/toko-hijab.db` | file SQLite (folder dibuat otomatis, mode 0700). Ada juga `-wal`/`-shm` di sebelahnya |
-| `STATIC_DIR` | (kosong) | folder build frontend (`dist/`). Kosong = API saja |
-| `COOKIE_SECURE` | `true` | cookie sesi `__Host-sesi; Secure`. Set `false` hanya untuk uji lokal via http |
-| `TRUST_PROXY` | `false` | `true` bila di belakang Caddy: IP klien (untuk rate limit) dari entri terakhir `X-Forwarded-For` |
-| `SESSION_DAYS` | `30` | sesi kedaluwarsa bila tidak dipakai selama N hari (diperpanjang otomatis saat dipakai) |
+| `PASTEL_ADDR` | `127.0.0.1:8087` | alamat dengar; di VPS tetap localhost, proxy (Caddy/nginx) yang membuka HTTPS |
+| `PASTEL_DB` | `pastel.db` (di folder kerja) | file SQLite; folder dibuat otomatis. Ada juga `-wal`/`-shm` di sebelahnya |
+| `PASTEL_COOKIE_SECURE` | `true` | cookie sesi `__Host-sesi; Secure`. `0`/`false` hanya untuk uji lokal via http |
+| `PASTEL_TRUST_PROXY` | `false` | `1` bila di belakang proxy lokal: IP klien (rate limit) dari entri terakhir `X-Forwarded-For`, **hanya** bila request datang dari loopback |
+| `PASTEL_SESSION_DAYS` | `30` | sesi kedaluwarsa bila tidak dipakai selama N hari (diperpanjang otomatis saat dipakai) |
+| `PASTEL_STATIC_DIR` | (kosong) | pakai folder ini untuk frontend, bukan hasil embed (pengembangan) |
 
-Contoh produksi (di belakang Caddy `pastel.diatera.com`):
-`ADDR=127.0.0.1:8080 DB_PATH=/var/lib/toko-hijab/toko-hijab.db STATIC_DIR=/opt/toko-hijab/dist TRUST_PROXY=true toko-hijab serve`
-
-Uji lokal: `COOKIE_SECURE=false STATIC_DIR=../dist ADDR=127.0.0.1:8931 ./toko-hijab`.
+Produksi: `deploy/env/pastel.env.example` → `/etc/pastel/pastel.env`.
+Uji lokal: `PASTEL_COOKIE_SECURE=0 PASTEL_DB=/tmp/p.db out/pastel` lalu buka http://127.0.0.1:8087.
 
 ## Keamanan
 
@@ -50,14 +51,14 @@ Uji lokal: `COOKIE_SECURE=false STATIC_DIR=../dist ADDR=127.0.0.1:8931 ./toko-hi
 - Rate limit: 5 gagal dari satu IP dalam 15 menit → 429 sampai 15 menit sejak kegagalan ke-5 terakhir (+ `Retry-After`).
   Lapis kedua: 20 gagal dari IP mana pun dalam 15 menit → semua login dikunci sementara. Password lama salah di
   "ganti password" juga dihitung.
-- Semua `/api/*` selain `POST /api/auth/login` wajib sesi → 401 (termasuk path tak dikenal).
+- Semua `/api/*` selain `POST /api/auth/login` dan `GET /api/health` wajib sesi → 401 (termasuk path tak dikenal).
 - CSRF: SameSite=Strict + request yang mengubah data wajib `Content-Type: application/json`, dan ditolak (403) bila
   `Origin` beda host atau `Sec-Fetch-Site` = cross-site/same-site.
 - Header: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, CSP di HTML. HSTS diserahkan ke Caddy.
 
 ## Frontend & cache PWA
 
-Hash router, jadi semua halaman = `index.html`. Path tanpa ekstensi yang tidak ada → `index.html`; file yang hilang → 404.
+Hash router, jadi semua halaman = `index.html`. File embed diberi `ETag` (isi) sehingga `no-cache` cukup dibalas 304. Path tanpa ekstensi yang tidak ada → `index.html`; file yang hilang → 404.
 `Cache-Control`: `index.html`, `*.webmanifest`, `sw.js` → `no-cache`; `assets/*` (nama ber-hash) → 1 tahun `immutable`;
 lainnya (ikon) → 1 hari.
 
@@ -72,6 +73,9 @@ lainnya (ikon) → 1 hari.
 Semua body & respons JSON. Error: `{"error": "pesan untuk pengguna"}` dengan kode 400 (input), 401 (belum login),
 403, 404, 409 (bentrok stok/data), 415, 429. Field tak dikenal di body ditolak 400.
 `PATCH` = ubah sebagian (field yang tidak dikirim tetap; `null` untuk mengosongkan field yang boleh kosong).
+
+### Health
+`GET /api/health` → `{"status":"ok"}` (200, tanpa sesi, tanpa data; 503 bila DB tidak siap). Dipakai `deploy.sh` & pemantauan.
 
 ### Auth
 | | |
@@ -134,6 +138,8 @@ Bila stok habis karena penarikan, modal kembali ke `modal_sebelum` (modal produk
 ## Struktur
 
 - `main.go` — perintah CLI & konfigurasi env
+- `build.sh` — build frontend + embed + binary `out/pastel`
+- `internal/web` — embed `dist/` (diisi build.sh, tidak di-commit)
 - `internal/hitung` — rumus murni modal (§5.2) + uji §7 butir 3 & 4
 - `internal/db` — buka SQLite, migrasi berversi (`migrations/NNNN_*.sql`, tabel `schema_migrations`), backup
 - `internal/app` — HTTP: auth, modul, penyaji frontend; `app_test.go` = uji API end-to-end (server TLS + DB sementara)

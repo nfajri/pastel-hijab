@@ -204,18 +204,19 @@ func (s *Server) authenticate(w http.ResponseWriter, r *http.Request) (session, 
 // --- rate limit login ---
 
 func (s *Server) clientIP(r *http.Request) string {
-	if s.cfg.TrustProxy {
-		// Caddy menambahkan IP klien sebagai entri terakhir; entri sebelumnya bisa dipalsukan klien.
-		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-			parts := strings.Split(xff, ",")
-			if ip := strings.TrimSpace(parts[len(parts)-1]); ip != "" {
-				return ip
-			}
-		}
-	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
-		return r.RemoteAddr
+		host = r.RemoteAddr
+	}
+	// X-Forwarded-For hanya dipercaya dari proxy lokal. Proxy menambahkan IP klien sebagai
+	// entri terakhir; entri sebelumnya bisa dipalsukan klien.
+	if ip := net.ParseIP(host); s.cfg.TrustProxy && ip != nil && ip.IsLoopback() {
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			parts := strings.Split(xff, ",")
+			if v := strings.TrimSpace(parts[len(parts)-1]); v != "" {
+				return v
+			}
+		}
 	}
 	return host
 }

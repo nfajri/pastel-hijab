@@ -3,6 +3,7 @@ package app
 
 import (
 	"database/sql"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"strings"
@@ -12,10 +13,10 @@ import (
 type Config struct {
 	// CookieSecure: cookie sesi hanya lewat HTTPS (wajib true di produksi).
 	CookieSecure bool
-	// TrustProxy: IP klien diambil dari X-Forwarded-For (pakai bila di belakang Caddy).
+	// TrustProxy: bila request datang dari loopback (Caddy/nginx lokal), IP klien diambil dari X-Forwarded-For.
 	TrustProxy bool
-	// StaticDir: folder build frontend (dist/). Kosong = tidak menyajikan frontend.
-	StaticDir string
+	// Static: isi build frontend (embed atau folder). nil = tidak menyajikan frontend.
+	Static fs.FS
 	// SessionTTL: sesi kedaluwarsa bila tidak dipakai selama ini (bawaan 30 hari).
 	SessionTTL time.Duration
 	// Now bisa diganti di test.
@@ -38,14 +39,15 @@ func New(db *sql.DB, cfg Config) *Server {
 	}
 	s := &Server{db: db, cfg: cfg, api: http.NewServeMux()}
 	s.routes()
-	if cfg.StaticDir != "" {
-		s.static = newStatic(cfg.StaticDir)
+	if cfg.Static != nil {
+		s.static = newStatic(cfg.Static)
 	}
 	return s
 }
 
 func (s *Server) routes() {
 	m := s.api
+	m.Handle("GET /api/health", handler(s.health))
 	m.Handle("POST /api/auth/login", handler(s.login))
 	m.Handle("POST /api/auth/logout", handler(s.logout))
 	m.Handle("POST /api/auth/logout-semua", handler(s.logoutSemua))
@@ -91,9 +93,17 @@ func (s *Server) routes() {
 	}))
 }
 
-// Endpoint yang boleh diakses tanpa sesi. Hanya login.
+// Endpoint yang boleh diakses tanpa sesi: login, dan health check (tanpa data) untuk deploy/pemantauan.
 func publicAPI(r *http.Request) bool {
-	return r.URL.Path == "/api/auth/login"
+	return (r.Method == http.MethodPost && r.URL.Path == "/api/auth/login") ||
+		(r.Method == http.MethodGet && r.URL.Path == "/api/health")
+}
+
+func (s *Server) health(w http.ResponseWriter, r *http.Request) error {
+	if err := s.db.PingContext(r.Context()); err != nil {
+		return errf(http.StatusServiceUnavailable, "database tidak siap")
+	}
+	return writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

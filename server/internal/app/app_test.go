@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -57,7 +58,11 @@ func newEnv(t *testing.T, static string) *env {
 	if err := CreateUser(d, testUser, testPass, c.Now()); err != nil {
 		t.Fatal(err)
 	}
-	ts := httptest.NewTLSServer(New(d, Config{CookieSecure: true, StaticDir: static, Now: c.Now}))
+	cfg := Config{CookieSecure: true, Now: c.Now}
+	if static != "" {
+		cfg.Static = os.DirFS(static)
+	}
+	ts := httptest.NewTLSServer(New(d, cfg))
 	t.Cleanup(ts.Close)
 	return &env{ts: ts, clock: c, dir: dir}
 }
@@ -704,5 +709,79 @@ func TestCLI_UserDanPassword(t *testing.T) {
 	}
 	if err := SetPassword(d, "tidak-ada", testPass, time.Now()); err == nil {
 		t.Fatal("set-password user tak ada")
+	}
+}
+
+func TestHealth_TanpaSesi(t *testing.T) {
+	e := newEnv(t, "")
+	anon := &client{t: t, base: e.ts.URL, hc: e.client()}
+	var h map[string]string
+	anon.json("GET", "/api/health", nil, 200, &h)
+	if h["status"] != "ok" {
+		t.Fatalf("health = %v", h)
+	}
+	// Hanya GET yang publik.
+	if code, _ := anon.do("POST", "/api/health", map[string]any{}); code != 401 {
+		t.Fatalf("POST /api/health tanpa sesi = %d, mau 401", code)
+	}
+}
+
+// X-Forwarded-For hanya dipakai bila TrustProxy aktif (peer test server = loopback, seperti Caddy lokal).
+func TestRateLimit_XForwardedFor(t *testing.T) {
+	for _, trust := range []bool{true, false} {
+		BcryptCost = bcrypt.MinCost
+		d, err := db.Open(filepath.Join(t.TempDir(), "x.db"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		c := newClock()
+		CreateUser(d, testUser, testPass, c.Now())
+		ts := httptest.NewTLSServer(New(d, Config{CookieSecure: true, TrustProxy: trust, Now: c.Now}))
+		cl := &client{t: t, base: ts.URL, hc: newClient(ts)}
+		for i := 0; i < 5; i++ {
+			cl.do("POST", "/api/auth/login", map[string]string{"username": testUser, "password": "salah-salah"}, "X-Forwarded-For", "1.1.1.1, 203.0.113.9")
+		}
+		// IP klien lain (entri terakhir beda) tidak ikut terkunci bila proxy dipercaya.
+		code, _ := cl.do("POST", "/api/auth/login", map[string]string{"username": testUser, "password": testPass}, "X-Forwarded-For", "203.0.113.10")
+		want := 200
+		if !trust {
+			want = 429 // XFF diabaikan → semua dari 127.0.0.1
+		}
+		if code != want {
+			t.Errorf("trust=%v: kode %d, mau %d", trust, code, want)
+		}
+		ts.Close()
+		d.Close()
+	}
+}
+
+func TestStatic_EmbedETag(t *testing.T) {
+	BcryptCost = bcrypt.MinCost
+	d, err := db.Open(filepath.Join(t.TempDir(), "e.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	fsys := fstest.MapFS{"index.html": {Data: []byte("<!doctype html>v1")}} // ModTime nol seperti embed
+	ts := httptest.NewServer(New(d, Config{Static: fsys}))
+	defer ts.Close()
+	res, err := http.Get(ts.URL + "/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	tag := res.Header.Get("ETag")
+	if tag == "" {
+		t.Fatal("tanpa ETag")
+	}
+	req, _ := http.NewRequest("GET", ts.URL+"/", nil)
+	req.Header.Set("If-None-Match", tag)
+	res, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != 304 {
+		t.Fatalf("revalidasi = %d, mau 304", res.StatusCode)
 	}
 }

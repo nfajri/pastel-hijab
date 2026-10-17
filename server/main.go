@@ -1,12 +1,12 @@
-// Command toko-hijab: server API + frontend Pastel Hijab (satu binary, SQLite).
+// Command pastel: server API + frontend Pastel Hijab (satu binary, SQLite, frontend di-embed).
 //
-//	toko-hijab serve                          jalankan server (bawaan bila tanpa argumen)
-//	toko-hijab user create <username>         buat akun (password dibaca dari terminal/stdin)
-//	toko-hijab user set-password <username>   reset password + cabut semua sesi
-//	toko-hijab backup <file-tujuan.db>        salinan konsisten database (aman saat server jalan)
-//	toko-hijab migrate                        terapkan migrasi skema lalu keluar
+//	pastel [serve]                       jalankan server
+//	pastel create-user <username>        buat akun (password dibaca dari terminal/stdin)
+//	pastel set-password <username>       reset password + cabut semua sesi
+//	pastel backup <file-tujuan.db>       salinan konsisten database (aman saat server jalan)
+//	pastel migrate                       terapkan migrasi skema lalu keluar
 //
-// Konfigurasi lewat env, lihat README.md.
+// Konfigurasi lewat env PASTEL_*, lihat README.md.
 package main
 
 import (
@@ -28,6 +28,7 @@ import (
 
 	"tokohijab/server/internal/app"
 	"tokohijab/server/internal/db"
+	"tokohijab/server/internal/web"
 )
 
 func env(key, def string) string {
@@ -50,7 +51,7 @@ func envBool(key string, def bool) bool {
 }
 
 func openDB() *sql.DB {
-	d, err := db.Open(env("DB_PATH", "data/toko-hijab.db"))
+	d, err := db.Open(env("PASTEL_DB", "pastel.db"))
 	if err != nil {
 		log.Fatalf("buka database: %v", err)
 	}
@@ -73,8 +74,8 @@ func main() {
 			log.Fatal(err)
 		}
 		fmt.Printf("skema versi %d\n", v)
-	case "user":
-		if len(args) != 3 || (args[1] != "create" && args[1] != "set-password") {
+	case "create-user", "set-password":
+		if len(args) != 2 {
 			usage()
 		}
 		d := openDB()
@@ -82,10 +83,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if args[1] == "create" {
-			err = app.CreateUser(d, args[2], pw, time.Now())
+		if args[0] == "create-user" {
+			err = app.CreateUser(d, args[1], pw, time.Now())
 		} else {
-			err = app.SetPassword(d, args[2], pw, time.Now())
+			err = app.SetPassword(d, args[1], pw, time.Now())
 		}
 		if err != nil {
 			log.Fatal(err)
@@ -106,11 +107,11 @@ func main() {
 
 func usage() {
 	fmt.Fprintln(os.Stderr, `pemakaian:
-  toko-hijab [serve]
-  toko-hijab user create <username>
-  toko-hijab user set-password <username>
-  toko-hijab backup <file-tujuan.db>
-  toko-hijab migrate`)
+  pastel [serve]
+  pastel create-user <username>
+  pastel set-password <username>
+  pastel backup <file-tujuan.db>
+  pastel migrate`)
 	os.Exit(2)
 }
 
@@ -152,30 +153,37 @@ func serve() {
 		log.Fatal(err)
 	}
 	if n == 0 {
-		log.Printf("PERINGATAN: belum ada akun. Buat dengan: toko-hijab user create <username>")
+		log.Printf("PERINGATAN: belum ada akun. Buat dengan: pastel create-user <username>")
 	}
 
-	days, err := strconv.Atoi(env("SESSION_DAYS", "30"))
+	days, err := strconv.Atoi(env("PASTEL_SESSION_DAYS", "30"))
 	if err != nil || days < 1 {
-		log.Fatalf("SESSION_DAYS tidak valid")
+		log.Fatalf("PASTEL_SESSION_DAYS tidak valid")
 	}
 	cfg := app.Config{
-		CookieSecure: envBool("COOKIE_SECURE", true),
-		TrustProxy:   envBool("TRUST_PROXY", false),
-		StaticDir:    env("STATIC_DIR", ""),
+		CookieSecure: envBool("PASTEL_COOKIE_SECURE", true),
+		TrustProxy:   envBool("PASTEL_TRUST_PROXY", false),
 		SessionTTL:   time.Duration(days) * 24 * time.Hour,
 	}
 	if !cfg.CookieSecure {
-		log.Printf("PERINGATAN: COOKIE_SECURE=false — hanya untuk pengembangan lokal")
+		log.Printf("PERINGATAN: PASTEL_COOKIE_SECURE=false — hanya untuk pengembangan lokal")
 	}
-	if cfg.StaticDir != "" {
-		if fi, err := os.Stat(cfg.StaticDir); err != nil || !fi.IsDir() {
-			log.Fatalf("STATIC_DIR %q bukan folder", cfg.StaticDir)
+	// Frontend: bawaan dari embed; PASTEL_STATIC_DIR menimpa (untuk pengembangan).
+	static := "embed"
+	if dir := env("PASTEL_STATIC_DIR", ""); dir != "" {
+		if fi, err := os.Stat(dir); err != nil || !fi.IsDir() {
+			log.Fatalf("PASTEL_STATIC_DIR %q bukan folder", dir)
 		}
+		cfg.Static, static = os.DirFS(dir), dir
+	} else if fsys, ok := web.FS(); ok {
+		cfg.Static = fsys
+	} else {
+		static = "tidak ada"
+		log.Printf("PERINGATAN: binary dibuild tanpa frontend (jalankan server/build.sh); hanya API yang tersedia")
 	}
 
 	srv := &http.Server{
-		Addr:              env("ADDR", "127.0.0.1:8080"),
+		Addr:              env("PASTEL_ADDR", "127.0.0.1:8087"),
 		Handler:           app.New(d, cfg),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
@@ -190,7 +198,7 @@ func serve() {
 		defer cancel()
 		srv.Shutdown(sctx)
 	}()
-	log.Printf("toko-hijab mendengarkan di %s (static=%q, secure=%v, proxy=%v)", srv.Addr, cfg.StaticDir, cfg.CookieSecure, cfg.TrustProxy)
+	log.Printf("pastel mendengarkan di %s (frontend=%s, secure=%v, proxy=%v)", srv.Addr, static, cfg.CookieSecure, cfg.TrustProxy)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
