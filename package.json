@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build --base ./",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "tsc --ignoreConfig src/lib/modal.ts --outDir .test-build --module esnext --target es2022 --skipLibCheck && node --test tests/*.test.mjs"
   },
   "dependencies": {
     "react": "^19.3.1",
