@@ -1,0 +1,12 @@
+[Unit]
+Description=Jadwal backup harian database Pastel Hijab (02.30 WIB)
+
+[Timer]
+OnCalendar=*-*-* 02:30:00 Asia/Jakarta
+RandomizedDelaySec=10min
+# Bila VPS mati saat jadwal, backup dijalankan begitu menyala lagi.
+Persistent=true
+Unit=pastel-backup.service
+
+[Install]
+WantedBy=timers.target

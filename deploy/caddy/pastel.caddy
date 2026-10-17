@@ -1,0 +1,30 @@
+# Pastel Hijab: blok situs Caddy. Pakai bila Caddy SUDAH jadi proxy di VPS (atau port 80/443 masih bebas).
+# Pasang: salin ke /etc/caddy/sites/pastel.caddy dan pastikan Caddyfile utama punya `import sites/*.caddy`,
+# atau tempel blok ini di akhir /etc/caddy/Caddyfile. Lalu: caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy
+# HTTPS Let's Encrypt otomatis begitu DNS pastel.diatera.com menunjuk ke VPS dan port 80/443 terbuka.
+pastel.diatera.com {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		X-Frame-Options "DENY"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	request_body {
+		max_size 5MB
+	}
+
+	# Caddy mengganti X-Forwarded-For dari klien yang tidak dipercaya dengan IP aslinya.
+	reverse_proxy 127.0.0.1:8087
+
+	log {
+		output file /var/log/caddy/pastel.access.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}
