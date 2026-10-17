@@ -6,7 +6,7 @@ export default function Laporan() {
     <>
       <PageHeader title="Laporan" subtitle="Laporan laba dan ekspor Excel." />
       <Card>
-        <p className="text-sm text-slate-500">Placeholder — isi halaman Laporan dibuat setelah desain disetujui.</p>
+        <p className="text-sm text-stone-500">Placeholder — isi halaman Laporan dibuat setelah desain disetujui.</p>
       </Card>
     </>
   )

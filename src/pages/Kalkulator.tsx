@@ -6,7 +6,7 @@ export default function Kalkulator() {
     <>
       <PageHeader title="Kalkulator" subtitle="Hitung harga jual per saluran." />
       <Card>
-        <p className="text-sm text-slate-500">Placeholder — isi halaman Kalkulator dibuat setelah desain disetujui.</p>
+        <p className="text-sm text-stone-500">Placeholder — isi halaman Kalkulator dibuat setelah desain disetujui.</p>
       </Card>
     </>
   )

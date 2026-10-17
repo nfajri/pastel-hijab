@@ -15,7 +15,7 @@ export default function AppLayout() {
               end={item.to === '/'}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
-                  isActive ? 'bg-brand-100 text-brand-700' : 'text-slate-600 hover:bg-slate-50'
+                  isActive ? 'bg-brand-100 text-brand-700' : 'text-stone-600 hover:bg-stone-50'
                 }`
               }
             >
@@ -44,7 +44,7 @@ export default function AppLayout() {
             end={item.to === '/'}
             className={({ isActive }) =>
               `flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium ${
-                isActive ? 'text-brand-700' : 'text-slate-500'
+                isActive ? 'text-brand-700' : 'text-stone-500'
               }`
             }
           >

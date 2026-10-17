@@ -1,12 +1,18 @@
 @import 'tailwindcss';
 
+/* Palet Pastel Hijab (logo + linktr.ee/pastelhijab). Detail & kontras: docs/design-system.md */
 @theme {
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --color-brand-50: #fdf2f8;
-  --color-brand-100: #fce7f3;
-  --color-brand-500: #ec4899;
-  --color-brand-600: #db2777;
-  --color-brand-700: #be185d;
+  --color-krem: #f8f3ed;
+  --color-ink: #362630;
+  --color-brand-50: #fbf1f1;
+  --color-brand-100: #f5e1e4;
+  --color-brand-300: #d99a9c;
+  --color-brand-500: #b87a80;
+  --color-brand-600: #a3636b;
+  --color-brand-700: #8c4f58;
+  /* stone-500 bawaan (#78716c) hanya 4,35:1 di atas krem; digelapkan supaya lolos AA */
+  --color-stone-500: #6f6762;
 }
 
 html,
@@ -16,7 +22,7 @@ body,
 }
 
 body {
-  @apply bg-brand-50 text-slate-900 antialiased;
+  @apply bg-krem text-ink antialiased;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
 }

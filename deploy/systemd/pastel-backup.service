@@ -1,0 +1,36 @@
+# Backup harian database Pastel (sqlite3 .backup) + salinan ke luar VPS (rclone, opsional).
+# Dijalankan oleh pastel-backup.timer. Manual: `systemctl start pastel-backup.service`.
+[Unit]
+Description=Backup database Pastel Hijab
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pastel
+Group=pastel
+EnvironmentFile=/etc/pastel/pastel.env
+EnvironmentFile=-/etc/pastel/backup.env
+Environment=TZ=Asia/Jakarta
+ExecStart=/opt/pastel/deploy/scripts/backup.sh
+UMask=0077
+Nice=10
+IOSchedulingClass=idle
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+# Baca DB (mode WAL butuh tulis ke -shm) + tulis arsip backup.
+ReadWritePaths=/var/lib/pastel /var/backups/pastel

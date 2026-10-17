@@ -1,12 +1,12 @@
 {
-  "name": "Toko Hijab — Pembukuan, Stok & Pricing",
-  "short_name": "Toko Hijab",
+  "name": "Pastel Hijab — Pembukuan, Stok & Harga",
+  "short_name": "Pastel Hijab",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#fdf2f8",
-  "theme_color": "#be185d",
+  "background_color": "#f8f3ed",
+  "theme_color": "#f8f3ed",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
