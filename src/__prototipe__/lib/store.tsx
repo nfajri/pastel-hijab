@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import { useToast } from '../../lib/toast'
 import type { CaraTarget, KomponenModal, Pembulatan } from './hitung'
 import { hargaMinimal, memenuhiTarget } from './hitung'
 import {
@@ -23,12 +24,6 @@ import {
 
 /** Keadaan data untuk mendemokan state kosong / memuat / gagal (khusus prototipe). */
 export type ModeData = 'normal' | 'kosong' | 'memuat' | 'gagal'
-
-interface Toast {
-  id: number
-  teks: string
-  aksi?: { label: string; to: string }
-}
 
 interface State {
   produk: Produk[]
@@ -61,14 +56,8 @@ const kosong = (): State => ({ ...awal(), produk: [], penjualan: [], pengeluaran
 function useStoreValue() {
   const [s, set] = useState<State>(awal)
   const [mode, setModeRaw] = useState<ModeData>('normal')
-  const [toast, setToast] = useState<Toast | null>(null)
-  const timer = useRef<number | undefined>(undefined)
-
-  const tampilkan = useCallback((teks: string, aksi?: Toast['aksi']) => {
-    window.clearTimeout(timer.current)
-    setToast({ id: Date.now(), teks, aksi })
-    timer.current = window.setTimeout(() => setToast(null), 4000)
-  }, [])
+  // Toast dipakai bersama aplikasi sungguhan (src/lib/toast.tsx); ToastProvider harus di atas StoreProvider.
+  const { toast, tampilkan, tutupToast } = useToast()
 
   const setMode = useCallback((m: ModeData) => {
     setModeRaw(m)
@@ -177,7 +166,7 @@ function useStoreValue() {
     setMode,
     toast,
     tampilkan,
-    tutupToast: () => setToast(null),
+    tutupToast,
     simpanPenjualan,
     hapusPenjualan,
     pakaiHarga,
