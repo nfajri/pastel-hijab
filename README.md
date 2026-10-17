@@ -21,3 +21,25 @@ Biaya rendah, ada backup, HTTPS. Mobile-first (iPhone), terutama layar catat pen
 
 ## Kriteria selesai
 Semua 17 butir §7 lolos QC; Bos menyetujui desain sebelum coding.
+
+---
+
+## Frontend (kerangka prototipe)
+
+Vite + React + TypeScript + Tailwind CSS v4, hash router. Belum ada backend. Tanpa localStorage/cookie/CDN/font eksternal.
+
+```bash
+npm install
+npm run dev       # dev server (http://localhost:5173), coba lebar 390px & 1280px
+npm run build     # tsc + vite build --base ./  -> dist/
+npm run preview   # lihat hasil build
+```
+
+Hasil `dist/` bisa dibuka langsung sebagai file statis (`dist/index.html` lewat `file://`) atau di-host di folder statis mana pun: build memakai path relatif dan script klasik (bukan ES module) supaya tidak diblokir browser.
+
+### Struktur
+- `src/nav.tsx` — daftar menu (satu sumber untuk sidebar & tab bar).
+- `src/components/layout/AppLayout.tsx` — bottom tab bar (< 768px) / sidebar (>= 768px).
+- `src/pages/` — placeholder: Beranda, Produk, Penjualan, Kalkulator, Laporan, Pengaturan. `#/komponen` = galeri komponen (tidak ada di menu).
+- `src/components/ui/` — Button, Input, RupiahInput (+ `formatRupiah`), Card, Sheet (bottom sheet di HP / modal di laptop), Tabs.
+- `public/manifest.webmanifest`, `public/icons/` — manifest PWA dasar + ikon placeholder (ganti dengan ikon asli nanti). Meta iOS & `viewport-fit=cover` ada di `index.html`; safe-area dipakai di layout. Belum ada service worker.
