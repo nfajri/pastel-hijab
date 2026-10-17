@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { BarisLink, BilahAtas, Button, Daftar, IK, Ikon, Input, KepalaHalaman, Sheet } from '../../components/ui'
 import { api } from '../../lib/api'
 import type { KomponenModal, Pengaturan as TPengaturan, Saluran } from '../../lib/api-types'
+import type { KategoriPengeluaran } from '../../lib/api-tahap2'
 import { useAuth } from '../../lib/auth'
 import { PEMBULATAN } from '../../lib/hitung'
 import { useToast } from '../../lib/toast'
@@ -92,6 +93,7 @@ export default function Pengaturan() {
   const saluran = useApi<Saluran[]>('/saluran')
   const komponen = useApi<KomponenModal[]>('/komponen-modal')
   const pengaturan = useApi<TPengaturan>('/pengaturan')
+  const kategoriPengeluaran = useApi<KategoriPengeluaran[]>('/kategori-pengeluaran')
   const [sandi, setSandi] = useState(false)
   const [semua, setSemua] = useState(false)
 
@@ -103,6 +105,12 @@ export default function Pengaturan() {
       ikon: IK.bulat,
       judul: 'Pembulatan harga',
       sub: pengaturan.data ? (PEMBULATAN.find((b) => b.key === pengaturan.data!.pembulatan_bawaan)?.label ?? '') : 'Pilihan awal di kalkulator',
+    },
+    {
+      to: '/pengaturan/pengeluaran',
+      ikon: IK.tag,
+      judul: 'Kategori pengeluaran',
+      sub: kategoriPengeluaran.data ? kategoriPengeluaran.data.filter((k) => k.aktif).map((k) => k.nama).join(', ') : 'Sewa lapak, iklan, packaging massal',
     },
   ]
 
