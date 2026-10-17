@@ -193,3 +193,43 @@ func TestHitungRincian_Persen(t *testing.T) {
 		t.Fatalf("pembagian nol: %+v", r)
 	}
 }
+
+// Temuan QC T-0138 #2: harga saran dengan pembulatan "tanpa" tidak boleh dinilai di bawah target
+// hanya karena harga & potongan dibulatkan ke rupiah (mis. 39.231 → untung 11.769 = 29,9992%).
+func TestMemenuhiTarget_SaranTanpaPembulatan(t *testing.T) {
+	tokopedia := []Potongan{
+		{ID: 1, Jenis: PotonganPersen, Nilai: 5, MaksRp: rp(2000)},
+		{ID: 2, Jenis: PotonganPerPcs, Nilai: 500},
+	}
+	r := HitungRincian(25000, tokopedia, 39231)
+	if !MemenuhiTarget(r, TargetPersenJual, 30) {
+		t.Fatalf("39.231 harus sesuai target 30%%: %+v", r)
+	}
+	if MemenuhiTarget(HitungRincian(25000, tokopedia, 39228), TargetPersenJual, 30) {
+		t.Fatal("39.228 (untung 11.767, kurang Rp1,4 dari 11.768,4) harus di bawah target")
+	}
+	salurans := [][]Potongan{shopee, tokopedia, {
+		{ID: 1, Jenis: PotonganPersen, Nilai: 4.5},
+		{ID: 2, Jenis: PotonganPersen, Nilai: 2.25, MaksRp: rp(3000)},
+		{ID: 3, Jenis: PotonganPerPesanan, Nilai: 1333},
+		{ID: 4, Jenis: PotonganPerPcs, Nilai: 777},
+	}}
+	targets := []struct {
+		cara  string
+		nilai float64
+	}{{TargetPersenJual, 25}, {TargetPersenJual, 30}, {TargetPersenJual, 33.3}, {TargetPersenModal, 40}, {TargetPersenModal, 17.5}, {TargetRupiah, 7777}}
+	for si, sal := range salurans {
+		for _, tg := range targets {
+			for M := 1000.0; M <= 60000; M += 37.37 {
+				M := Sen(M)
+				saran, _, err := HargaSaran(M, sal, tg.cara, tg.nilai, BulatTanpa)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !MemenuhiTarget(HitungRincian(M, sal, saran), tg.cara, tg.nilai) {
+					t.Fatalf("saluran %d %s %v modal %v: saran %d dinilai di bawah target", si, tg.cara, tg.nilai, M, saran)
+				}
+			}
+		}
+	}
+}

@@ -357,6 +357,10 @@ func (s *Server) putHarga(w http.ResponseWriter, r *http.Request) error {
 	if err := rupiah("harga", *in.Harga); err != nil {
 		return err
 	}
+	if *in.Harga == 0 {
+		// Harga 0 hanya boleh di penjualan (hadiah, diketik sengaja), bukan sebagai harga produk-saluran.
+		return bad("Isi harga")
+	}
 	if (in.TargetCara == nil) != (in.TargetNilai == nil) {
 		return bad("target_cara dan target_nilai diisi bersamaan")
 	}
